@@ -1,0 +1,41 @@
+---
+title: "Covid Vignette"
+author: "Xavier Genelin"
+date: "9/29/2021"
+output: 
+  github_document:
+    toc: True
+    html_preview: False
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Packages
+
+`tidyverse`
+`httr`
+`jsonlite`
+
+```{r cars}
+library(tidyverse)
+library(httr)
+library(jsonlite)
+```
+
+## Functions
+
+
+
+```{r}
+
+```
+
+## Data Exporation
+
+```{r}
+
+```
+
+
