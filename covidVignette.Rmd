@@ -113,6 +113,8 @@ data[1,1] == ""
 total <- function(country, IDType, case = "all") {
   # get the total covid numbers for a country by day
   # user has the option to get all numbers or just confirmed, recovered, or deaths
+  # Find an easy way to get the date in here along with the other functions
+  # Date needs to be added in after the country and case portions
   if(case == "all"){
     main <- "https://api.covid19api.com/total/country/"
     country <- getCountry(country, IDType)
@@ -203,14 +205,25 @@ dayOne <- function(country, IDType, case = "all") {
 dayOne(country = "AL", IDType = "id")
 ```
 
+Create one final function that uses the other functions above to collect whatever data is needed
+```{r}
+covid <- function(func, ...){
+  if(func == "total"){
+    output <- total(...)
+  } else if(func == "live"){
+    output <- live(...)
+  } else if(func == "dayOne"){
+    output <- dayOne(...)
+  } else {
+    stop("ERROR: choose total, live, or dayOne as function")
+  }
+}
+```
+
+
 
 ## Data Exporation
 
-```{r}
-data1 <- covidSummary(type = "country")
 
-ggplot(data1, aes(x = NewConfirmed, y = NewDeaths)) +
-  geom_point()
-```
 
 
