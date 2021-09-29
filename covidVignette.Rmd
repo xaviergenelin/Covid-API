@@ -28,15 +28,59 @@ library(jsonlite)
 
 This will be used in each of the functions to get the data from the API. Just an example for easy copying
 ```{r}
-getAPI <- GET("https://api.covid19api.com/summary")
+getAPI <- GET("https://api.covid19api.com/all")
 
 dat <- fromJSON(rawToChar(getAPI$content))
+
+as_tibble(dat)
 ```
 
 
 ```{r}
+# The user can either choose a global summary or country
 
+covidSummary <- function(type = "global"){
+  ### you can either select global or country to see the global summary or 
+  # the summary by country
+  getAPI <- GET("https://api.covid19api.com/summary")
+  dat <- fromJSON(rawToChar(getAPI$content))
+  
+  if(type == "global"){
+    output <- as_tiblle(dat$Global)
+  } else if(type == "country"){
+    output <- as_tibble(dat$Countries)
+  }
+  return(output)
+}
 ```
+
+```{r}
+covidSummary("country")
+```
+
+```{r}
+getAPI <- GET("https://api.covid19api.com/countries")
+
+dat <- fromJSON(rawToChar(getAPI$content))
+
+as_tibble(dat)
+```
+
+Not sure if this will be necessary 
+```{r}
+getCountry <- function(country, IDType){
+  # This will return a tibble with the country name, the country name in lowercase
+  # with dashes instead of spaces, and the country code
+  getAPI <- GET("https://api.covid19api.com/countries")
+  dat <- fromJSON(rawToChar(getAPI$content))
+  data <- as_tibble(dat)
+  
+  if(IDType == "country"){
+    output <- data
+  }
+}
+```
+
 
 ## Data Exporation
 
