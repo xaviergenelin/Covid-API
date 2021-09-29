@@ -97,12 +97,52 @@ getCountry <- function(country, IDType){
 ```
 
 ```{r}
-getAPI <- GET("https://api.covid19api.com/countries")
+getAPI <- GET("https://api.covid19api.com/total/country/united-states/status/death")
 dat <- fromJSON(rawToChar(getAPI$content))
 data <- as_tibble(dat)
-data %>% filter(Country == "United States of America")# %>% select(Slug)
 
+data[1,1] == ""
 ```
+
+```{r}
+countryTotal <- function(country, IDType, case = "all") {
+  # get the total covid numbers for a country by day
+  # user has the option to get all numbers or just confirmed, recovered, or deaths
+  if(case == "all"){
+    main <- "https://api.covid19api.com/total/country/"
+    country <- getCountry(country, IDType)
+    url <- paste0(main, country)
+    getAPI <- GET(url)
+    dat <- fromJSON(rawToChar(getAPI$content))
+    output <- as_tibble(dat)
+    
+  } else if(case != "all"){
+    main <- "https://api.covid19api.com/total/country/"
+    country <- getCountry(country, IDType)
+    url <- paste0(main, country, "/status/", case)
+    getAPI <- GET(url)
+    dat <- fromJSON(rawToChar(getAPI$content))
+    output <- as_tibble(dat)
+  } 
+  if(output[1,1] == ""){
+    stop("ERROR: make sure case is either all, confirmed, recovered, or deaths")
+  }
+  return(output)
+}
+
+countryTotal(country= "AL", IDType = "id", case = "recovered")
+```
+
+```{r}
+main <- "https://api.covid19api.com/total/country/"
+country <- getCountry("United States of America", "country")
+case <- "death"
+paste0(main, country, "/status/", case)
+getAPI <- GET(url)
+dat <- fromJSON(rawToChar(getAPI$content))
+output <- as_tibble(dat)
+```
+
 
 ## Data Exporation
 
