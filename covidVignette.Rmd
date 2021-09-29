@@ -137,16 +137,6 @@ countryTotal(country= "AL", IDType = "id", case = "recovered")
 ```
 
 ```{r}
-main <- "https://api.covid19api.com/total/country/"
-country <- getCountry("United States of America", "country")
-case <- "death"
-paste0(main, country, "/status/", case)
-getAPI <- GET(url)
-dat <- fromJSON(rawToChar(getAPI$content))
-output <- as_tibble(dat)
-```
-
-```{r}
 getAPI <- GET("https://api.covid19api.com/all")
 dat <- fromJSON(rawToChar(getAPI$content))
 dat
