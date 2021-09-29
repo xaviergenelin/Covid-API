@@ -108,7 +108,7 @@ data[1,1] == ""
 ```
 
 ```{r}
-countryTotal <- function(country, IDType, case = "all") {
+total <- function(country, IDType, case = "all") {
   # get the total covid numbers for a country by day
   # user has the option to get all numbers or just confirmed, recovered, or deaths
   if(case == "all"){
@@ -133,13 +133,72 @@ countryTotal <- function(country, IDType, case = "all") {
   return(output)
 }
 
-countryTotal(country= "AL", IDType = "id", case = "recovered")
+total(country= "AL", IDType = "id", case = "recovered")
+```
+
+Live data for each country
+```{r}
+live <- function(country, IDType, case = "all") {
+  # get the total covid numbers for a country by day
+  # user has the option to get all numbers or just confirmed, recovered, or deaths
+  if(case == "all"){
+    main <- "https://api.covid19api.com/live/country/"
+    country <- getCountry(country, IDType)
+    url <- paste0(main, country)
+    getAPI <- GET(url)
+    dat <- fromJSON(rawToChar(getAPI$content))
+    output <- as_tibble(dat)
+    
+  } else if(case != "all"){
+    main <- "https://api.covid19api.com/live/country/"
+    country <- getCountry(country, IDType)
+    url <- paste0(main, country, "/status/", case)
+    getAPI <- GET(url)
+    dat <- fromJSON(rawToChar(getAPI$content))
+    output <- as_tibble(dat)
+  } 
+  if(output[1,1] == ""){
+    stop("ERROR: make sure case is either all, confirmed, recovered, or deaths")
+  }
+  return(output)
+}
 ```
 
 ```{r}
-getAPI <- GET("https://api.covid19api.com/all")
-dat <- fromJSON(rawToChar(getAPI$content))
-dat
+live(country = "US", IDType = "id")
+```
+
+
+Day one data for each country
+```{r}
+dayOne <- function(country, IDType, case = "all") {
+  # get the total covid numbers for a country by day
+  # user has the option to get all numbers or just confirmed, recovered, or deaths
+  if(case == "all"){
+    main <- "https://api.covid19api.com/dayone/country/"
+    country <- getCountry(country, IDType)
+    url <- paste0(main, country)
+    getAPI <- GET(url)
+    dat <- fromJSON(rawToChar(getAPI$content))
+    output <- as_tibble(dat)
+    
+  } else if(case != "all"){
+    main <- "https://api.covid19api.com/dayone/country/"
+    country <- getCountry(country, IDType)
+    url <- paste0(main, country, "/status/", case)
+    getAPI <- GET(url)
+    dat <- fromJSON(rawToChar(getAPI$content))
+    output <- as_tibble(dat)
+  } 
+  if(output[1,1] == ""){
+    stop("ERROR: make sure case is either all, confirmed, recovered, or deaths")
+  }
+  return(output)
+}
+```
+
+```{r}
+dayOne(country = "AL", IDType = "id")
 ```
 
 
