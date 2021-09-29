@@ -14,11 +14,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Packages
 
-`tidyverse`
-`httr`
-`jsonlite`
+-`tidyverse`  
+-`httr`  
+-`jsonlite`  
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(httr)
 library(jsonlite)
@@ -66,21 +66,43 @@ dat <- fromJSON(rawToChar(getAPI$content))
 as_tibble(dat)
 ```
 
-Not sure if this will be necessary 
+Need this because country filters need to be the slug, so the user can choose anything but return the slug
 ```{r}
 getCountry <- function(country, IDType){
   # This will return a tibble with the country name, the country name in lowercase
-  # with dashes instead of spaces, and the country code
+  # with dashes instead of spaces (slug), and the country code of length 2
+  # For example, if we want the United States:
+  # country: United States of America, slug: united-states, id: US
   getAPI <- GET("https://api.covid19api.com/countries")
   dat <- fromJSON(rawToChar(getAPI$content))
   data <- as_tibble(dat)
   
   if(IDType == "country"){
-    output <- data
+    output <- data %>% filter(Country == country) %>% select(Slug)
+  } else if(IDType == "id"){
+    output <- data %>% filter(ISO2 == toupper(country)) %>% select(Slug)
+  } else if(IDType == "slug"){
+    output <- data %>% filter(slug == country) %>% select(Slug)
+  } else {
+    stop("ERROR: Invalid IDType. Should be country, id, or slug")
   }
+  
+  if(nrow(output) == 0){
+    stop("ERROR: Country not found. Check spelling and possible capitalization")
+  }
+  return(output)
+  
 }
+
 ```
 
+```{r}
+getAPI <- GET("https://api.covid19api.com/countries")
+dat <- fromJSON(rawToChar(getAPI$content))
+data <- as_tibble(dat)
+data %>% filter(Country == "United States of America")# %>% select(Slug)
+
+```
 
 ## Data Exporation
 
