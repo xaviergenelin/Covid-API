@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 `httr`
 `jsonlite`
 
-```{r cars}
+```{r}
 library(tidyverse)
 library(httr)
 library(jsonlite)
@@ -26,6 +26,12 @@ library(jsonlite)
 
 ## Functions
 
+This will be used in each of the functions to get the data from the API. Just an example for easy copying
+```{r}
+getAPI <- GET("https://api.covid19api.com/summary")
+
+dat <- fromJSON(rawToChar(getAPI$content))
+```
 
 
 ```{r}
