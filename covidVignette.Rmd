@@ -99,6 +99,8 @@ getCountry <- function(country, IDType){
 
 ```
 
+
+Testing to see if this will work as an error for the total function
 ```{r}
 getAPI <- GET("https://api.covid19api.com/total/country/united-states/status/death")
 dat <- fromJSON(rawToChar(getAPI$content))
