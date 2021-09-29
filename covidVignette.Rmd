@@ -46,16 +46,20 @@ covidSummary <- function(type = "global"){
   dat <- fromJSON(rawToChar(getAPI$content))
   
   if(type == "global"){
-    output <- as_tiblle(dat$Global)
+    output <- as_tibble(dat$Global)
   } else if(type == "country"){
     output <- as_tibble(dat$Countries)
+    
+    output <- output %>% select("Country", "CountryCode", "Slug", "NewConfirmed", 
+                                "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date")
   }
   return(output)
 }
 ```
 
 ```{r}
-covidSummary("country")
+a <- covidSummary("country")
+a
 ```
 
 ```{r}
@@ -91,7 +95,6 @@ getCountry <- function(country, IDType){
     stop("ERROR: Country not found. Check spelling and possible capitalization")
   }
   return(output)
-  
 }
 
 ```
@@ -143,11 +146,20 @@ dat <- fromJSON(rawToChar(getAPI$content))
 output <- as_tibble(dat)
 ```
 
+```{r}
+getAPI <- GET("https://api.covid19api.com/all")
+dat <- fromJSON(rawToChar(getAPI$content))
+dat
+```
+
 
 ## Data Exporation
 
 ```{r}
+data1 <- covidSummary(type = "country")
 
+ggplot(data1, aes(x = NewConfirmed, y = NewDeaths)) +
+  geom_point()
 ```
 
 
