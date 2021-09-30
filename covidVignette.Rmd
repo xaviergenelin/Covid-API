@@ -116,6 +116,22 @@ data <- as_tibble(dat)
 data %>% arrange(City)
 ```
 
+```{r}
+getAPI <- GET("https://api.covid19api.com/country/united-states?province=wisconsin")
+dat <- fromJSON(rawToChar(getAPI$content))
+data <- as_tibble(dat)
+
+data %>% filter(City == "Dane")
+```
+
+```{r}
+getAPI <- GET("https://api.covid19api.com/dayone/country/united-states?province=utah")
+dat <- fromJSON(rawToChar(getAPI$content))
+data <- as_tibble(dat)
+data
+```
+
+
 The `total` function collects data from the API 
 
 ```{r}
