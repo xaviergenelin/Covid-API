@@ -12,7 +12,11 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+This document is a vignette that'll show how we can retrieve data from an API and perform exploratory analysis. This will use the [Covid API](https://covid19api.com/). We will build our own functions that will collect data from the API and allow a user to interact with it by choosing different endpoints they can retrieve.
+
 ## Packages
+
+To be able to interact with the API and manipulate the data we want to return, the following packages will need to be installed and used:
 
 -`tidyverse`  
 -`httr`  
@@ -33,8 +37,10 @@ getAPI <- GET("https://api.covid19api.com/all")
 dat <- fromJSON(rawToChar(getAPI$content))
 
 as_tibble(dat)
+covidSummary("global")
 ```
 
+This first function gets access to the covid summary data and allows the user to choose either a global or country summary. The global summary will return one row with data on NewConfirmed, TotalConfirmed, NewDeaths, TotalDeaths, NewRecovered, and TotalRecovered along with the date that this data is from. The country data will show the same data for `r nrow(covidSummary("country"))` countries as well as their country name, country code, and slug.
 
 ```{r}
 # The user can either choose a global summary or country
@@ -58,10 +64,7 @@ covidSummary <- function(type){
 }
 ```
 
-```{r}
-covidSummary("country")
 
-```
 
 ```{r}
 getAPI <- GET("https://api.covid19api.com/countries")
@@ -71,7 +74,8 @@ dat <- fromJSON(rawToChar(getAPI$content))
 as_tibble(dat)
 ```
 
-Need this because country filters need to be the slug, so the user can choose anything but return the slug
+The next function will allow the user to either type out the country name, country code, or slug it will return the slug value. This is necessary because country filters need to be the slug, so the user can choose anything and not have later functions error out. So for example, if someone wanted to get data on the United States, they would either have to type in "United States of America", "united-states", "US", or "us".
+
 ```{r}
 getCountry <- function(country, IDType){
   # This will return a tibble with the country name, the country name in lowercase
@@ -102,13 +106,17 @@ getCountry <- function(country, IDType){
 
 
 Testing to see if this will work as an error for the total function
+
+It works for this one!!!!
 ```{r}
-getAPI <- GET("https://api.covid19api.com/total/country/united-states/status/death")
+getAPI <- GET("https://api.covid19api.com/country/united-states/status/confirmed/live?province=ohio")
 dat <- fromJSON(rawToChar(getAPI$content))
 data <- as_tibble(dat)
 
-data[1,1] == ""
+data %>% arrange(City)
 ```
+
+The `total` function collects data from the API 
 
 ```{r}
 total <- function(country, IDType, case = "all") {
