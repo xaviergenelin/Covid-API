@@ -9,8 +9,6 @@ output:
 ---
 
 ############## Current idea of what to do with this
-I have the function created for the global and country summaries. Add in the regions to allow the user to select a specific region for the countries, can't do that for the global one
-
 Rework the live, total, and oneDay functions to allow the user to select a date range, province, and city/city code. Probably just the city because the code was a little odd. Not sure how it's choosing that. I should be able to print the list of options from the choices by using `toString(sort(unique(data$City)))`. Maybe make a function for that too, idk. 
 
 The current issue is some of the urls don't work in the same order by just adding on things at the end. I'll have to go into the API site to see which one should be used for what the user might filter on. 
@@ -19,19 +17,19 @@ After that the visuals/EDA should be it for creating the vignette and then move 
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
 This document is a vignette that'll show how we can retrieve data from an API and perform exploratory analysis. This will use the [Covid API](https://covid19api.com/). We will build our own functions that will collect data from the API and allow a user to interact with it by choosing different endpoints they can retrieve.
 
-## Packages
+# Packages
 
 To be able to interact with the API and manipulate the data we want to return, the following packages will need to be installed and used:
 
-*`tidyverse`: this package will allow us to manipulate and visualize the data  
-*`httr`: gives us a response object from the API url   
-*`jsonlite`: allows us to interact with the API  
-* `countrycode`: this lets us tie the country name to the continent which is defined by the World Bank Development Indicators   
+* `tidyverse`: this package will allow us to manipulate and visualize the data  
+* `httr`: gives us a response object from the API url   
+* `jsonlite`: allows us to interact with the API  
+* `countrycode`: this lets us tie the country name to the continent which is defined by the World Bank Development Indicators. The Republic of Kosovo is the only one that seems to be missing the continent. This is located in Europe and will be added     
 
 ```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -84,7 +82,7 @@ test2
 ```
 
 
-### Functions
+# Functions
 
 This will be used in each of the functions to get the data from the API. Just an example for easy copying
 ```{r}
@@ -98,10 +96,11 @@ covidSummary("global")
 
 This first function gets access to the covid summary data and allows the user to choose either a global or country summary. The global summary will return one row with data on NewConfirmed, TotalConfirmed, NewDeaths, TotalDeaths, NewRecovered, and TotalRecovered along with the date that this data is from. The country data will show the same data for `r nrow(covidSummary("country"))` countries as well as their country name, country code, and slug.
 
+## `covidSummary`
 ```{r}
 # The user can either choose a global summary or country
 
-covidSummary <- function(type){
+covidSummary <- function(type, continent = "all"){
   ### you can either select global or country to see the global summary or 
   # the summary by country
   getAPI <- GET("https://api.covid19api.com/summary")
@@ -114,12 +113,24 @@ covidSummary <- function(type){
     
     output <- output %>% select("Country", "CountryCode", "Slug", "NewConfirmed", 
                                 "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date")
+    
+    output$Continent <- countrycode(output$Country, origin = "country.name", destination = "continent")
+    
+    output$Continent[is.na(output$Continent)] <- "Europe"
+  }
+  
+  if(continent != "all"){
+    output <- output %>% filter(Continent == continent)
   }
 
   return(output)
 }
 ```
 
+```{r}
+ex <- covidSummary("country", continent = "Europe")
+
+```
 
 
 ```{r}

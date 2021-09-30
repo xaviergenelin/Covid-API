@@ -4,14 +4,11 @@ Xavier Genelin
 9/30/2021
 
 -   [Packages](#packages)
-    -   [Functions](#functions)
--   [Data Exporation](#data-exporation)
+-   [Functions](#functions)
+    -   [`covidSummary`](#covidsummary)
+    -   [Data Exporation](#data-exporation)
 
 ############## Current idea of what to do with this
-
-I have the function created for the global and country summaries. Add in
-the regions to allow the user to select a specific region for the
-countries, can’t do that for the global one
 
 Rework the live, total, and oneDay functions to allow the user to select
 a date range, province, and city/city code. Probably just the city
@@ -33,17 +30,19 @@ API](https://covid19api.com/). We will build our own functions that will
 collect data from the API and allow a user to interact with it by
 choosing different endpoints they can retrieve.
 
-## Packages
+# Packages
 
 To be able to interact with the API and manipulate the data we want to
 return, the following packages will need to be installed and used:
 
-*`tidyverse`: this package will allow us to manipulate and visualize the
-data  
-*`httr`: gives us a response object from the API url  
-*`jsonlite`: allows us to interact with the API  
-* `countrycode`: this lets us tie the country name to the continent
-which is defined by the World Bank Development Indicators
+-   `tidyverse`: this package will allow us to manipulate and visualize
+    the data  
+-   `httr`: gives us a response object from the API url  
+-   `jsonlite`: allows us to interact with the API  
+-   `countrycode`: this lets us tie the country name to the continent
+    which is defined by the World Bank Development Indicators. The
+    Republic of Kosovo is the only one that seems to be missing the
+    continent. This is located in Europe and will be added
 
 ``` r
 library(tidyverse)
@@ -143,7 +142,7 @@ test2
     ## 10 South Africa ZA          ""       ""    ""       -30.56 22.94     0 deaths 2020-03-14T00:00:00Z
     ## # ... with 565 more rows
 
-### Functions
+# Functions
 
 This will be used in each of the functions to get the data from the API.
 Just an example for easy copying
@@ -177,10 +176,12 @@ NewDeaths, TotalDeaths, NewRecovered, and TotalRecovered along with the
 date that this data is from. The country data will show the same data
 for 192 countries as well as their country name, country code, and slug.
 
+## `covidSummary`
+
 ``` r
 # The user can either choose a global summary or country
 
-covidSummary <- function(type){
+covidSummary <- function(type, continent = "all"){
   ### you can either select global or country to see the global summary or 
   # the summary by country
   getAPI <- GET("https://api.covid19api.com/summary")
@@ -193,10 +194,22 @@ covidSummary <- function(type){
     
     output <- output %>% select("Country", "CountryCode", "Slug", "NewConfirmed", 
                                 "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date")
+    
+    output$Continent <- countrycode(output$Country, origin = "country.name", destination = "continent")
+    
+    output$Continent[is.na(output$Continent)] <- "Europe"
+  }
+  
+  if(continent != "all"){
+    output <- output %>% filter(Continent == continent)
   }
 
   return(output)
 }
+```
+
+``` r
+ex <- covidSummary("country", continent = "Europe")
 ```
 
 ``` r
@@ -511,19 +524,19 @@ covid <- function(func, ...){
 covid("summary", "country")
 ```
 
-    ## # A tibble: 192 x 10
-    ##    Country             CountryCode Slug                NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date              
-    ##    <chr>               <chr>       <chr>                      <int>          <int>     <int>       <int>        <int>          <int> <chr>             
-    ##  1 Afghanistan         AF          afghanistan                    0         155128         0        7204            0              0 2021-09-30T18:52:~
-    ##  2 Albania             AL          albania                        0         169462         0        2685            0              0 2021-09-30T18:52:~
-    ##  3 Algeria             DZ          algeria                        0         203198         0        5805            0              0 2021-09-30T18:52:~
-    ##  4 Andorra             AD          andorra                        0          15209         0         130            0              0 2021-09-30T18:52:~
-    ##  5 Angola              AO          angola                         0          56583         0        1537            0              0 2021-09-30T18:52:~
-    ##  6 Antigua and Barbuda AG          antigua-and-barbuda            0           3188         0          76            0              0 2021-09-30T18:52:~
-    ##  7 Argentina           AR          argentina                      0        5255261         0      115130            0              0 2021-09-30T18:52:~
-    ##  8 Armenia             AM          armenia                        0         260675         0        5299            0              0 2021-09-30T18:52:~
-    ##  9 Australia           AU          australia                   2400         105123        12        1291            0              0 2021-09-30T18:52:~
-    ## 10 Austria             AT          austria                        0         741046         0       10998            0              0 2021-09-30T18:52:~
+    ## # A tibble: 192 x 11
+    ##    Country             CountryCode Slug                NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date     Continent
+    ##    <chr>               <chr>       <chr>                      <int>          <int>     <int>       <int>        <int>          <int> <chr>    <chr>    
+    ##  1 Afghanistan         AF          afghanistan                    0         155128         0        7204            0              0 2021-09~ Asia     
+    ##  2 Albania             AL          albania                        0         169462         0        2685            0              0 2021-09~ Europe   
+    ##  3 Algeria             DZ          algeria                        0         203198         0        5805            0              0 2021-09~ Africa   
+    ##  4 Andorra             AD          andorra                        0          15209         0         130            0              0 2021-09~ Europe   
+    ##  5 Angola              AO          angola                         0          56583         0        1537            0              0 2021-09~ Africa   
+    ##  6 Antigua and Barbuda AG          antigua-and-barbuda            0           3188         0          76            0              0 2021-09~ Americas 
+    ##  7 Argentina           AR          argentina                      0        5255261         0      115130            0              0 2021-09~ Americas 
+    ##  8 Armenia             AM          armenia                        0         260675         0        5299            0              0 2021-09~ Asia     
+    ##  9 Australia           AU          australia                   2400         105123        12        1291            0              0 2021-09~ Oceania  
+    ## 10 Austria             AT          austria                        0         741046         0       10998            0              0 2021-09~ Europe   
     ## # ... with 182 more rows
 
 ``` r
