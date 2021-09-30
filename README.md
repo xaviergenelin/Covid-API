@@ -6,7 +6,7 @@ Xavier Genelin
 -   [Packages](#packages)
 -   [Functions](#functions)
     -   [`covidSummary`](#covidsummary)
-    -   [Data Exporation](#data-exporation)
+-   [Data Exporation](#data-exporation)
 
 ############## Current idea of what to do with this
 
@@ -16,6 +16,8 @@ because the code was a little odd. Not sure how it’s choosing that. I
 should be able to print the list of options from the choices by using
 `toString(sort(unique(data$City)))`. Maybe make a function for that too,
 idk.
+
+Maybe having a function for live, total and oneday isn’t the way to go?
 
 The current issue is some of the urls don’t work in the same order by
 just adding on things at the end. I’ll have to go into the API site to
@@ -71,27 +73,46 @@ urls for each type to refer back to
 
 ``` r
 # Day one all status
-getAPI <- GET("https://api.covid19api.com/dayone/country/south-africa")
+getAPI <- GET("https://api.covid19api.com/dayone/country/south-africa/status/confirmed/live")
 
 dat <- fromJSON(rawToChar(getAPI$content))
 
 test1 <- as_tibble(dat)
+test1
+```
+
+    ## # A tibble: 575 x 10
+    ##    Country      CountryCode Province City  CityCode Lat    Lon   Cases Status    Date                
+    ##    <chr>        <chr>       <chr>    <chr> <chr>    <chr>  <chr> <int> <chr>     <chr>               
+    ##  1 South Africa ZA          ""       ""    ""       -30.56 22.94     1 confirmed 2020-03-05T00:00:00Z
+    ##  2 South Africa ZA          ""       ""    ""       -30.56 22.94     1 confirmed 2020-03-06T00:00:00Z
+    ##  3 South Africa ZA          ""       ""    ""       -30.56 22.94     1 confirmed 2020-03-07T00:00:00Z
+    ##  4 South Africa ZA          ""       ""    ""       -30.56 22.94     3 confirmed 2020-03-08T00:00:00Z
+    ##  5 South Africa ZA          ""       ""    ""       -30.56 22.94     3 confirmed 2020-03-09T00:00:00Z
+    ##  6 South Africa ZA          ""       ""    ""       -30.56 22.94     7 confirmed 2020-03-10T00:00:00Z
+    ##  7 South Africa ZA          ""       ""    ""       -30.56 22.94    13 confirmed 2020-03-11T00:00:00Z
+    ##  8 South Africa ZA          ""       ""    ""       -30.56 22.94    17 confirmed 2020-03-12T00:00:00Z
+    ##  9 South Africa ZA          ""       ""    ""       -30.56 22.94    24 confirmed 2020-03-13T00:00:00Z
+    ## 10 South Africa ZA          ""       ""    ""       -30.56 22.94    38 confirmed 2020-03-14T00:00:00Z
+    ## # ... with 565 more rows
+
+``` r
 test1 %>% arrange(desc(Date))
 ```
 
-    ## # A tibble: 575 x 13
-    ##    ID                                   Country      CountryCode Province City  CityCode Lat    Lon   Confirmed Deaths Recovered  Active Date          
-    ##    <chr>                                <chr>        <chr>       <chr>    <chr> <chr>    <chr>  <chr>     <int>  <int>     <int>   <int> <chr>         
-    ##  1 e4e18132-3ba3-459c-939e-8caee53e366b South Africa ZA          ""       ""    ""       -30.56 22.94   2898888  87417         0 2811471 2021-09-30T00~
-    ##  2 5b946578-46dd-4627-b710-d56f81614b28 South Africa ZA          ""       ""    ""       -30.56 22.94   2898888  87417         0 2811471 2021-09-29T00~
-    ##  3 0125bd67-56b7-46d6-a5ad-88a37d91c36c South Africa ZA          ""       ""    ""       -30.56 22.94   2898888  87417         0 2811471 2021-09-28T00~
-    ##  4 fd723942-1255-4eff-96f6-637c3eba8973 South Africa ZA          ""       ""    ""       -30.56 22.94   2897521  87216         0 2810305 2021-09-27T00~
-    ##  5 0a6851c4-b9fc-4da4-a64e-18256c27ad97 South Africa ZA          ""       ""    ""       -30.56 22.94   2896943  87052         0 2809891 2021-09-26T00~
-    ##  6 f1f581d2-5a1d-4051-b569-d1cbca8d816d South Africa ZA          ""       ""    ""       -30.56 22.94   2895976  87001         0 2808975 2021-09-25T00~
-    ##  7 d5588a54-eccc-4bf5-96b8-d68cb7fbf9d3 South Africa ZA          ""       ""    ""       -30.56 22.94   2894342  86967         0 2807375 2021-09-24T00~
-    ##  8 bdefb549-7170-414d-b9ff-2aa6bbccd3b0 South Africa ZA          ""       ""    ""       -30.56 22.94   2892081  86655         0 2805426 2021-09-23T00~
-    ##  9 af41b469-a99b-4a5e-8e05-38d4a6d13aa2 South Africa ZA          ""       ""    ""       -30.56 22.94   2889298  86500         0 2802798 2021-09-22T00~
-    ## 10 dae8dfce-3b14-4361-b7b1-f80ec5a4388f South Africa ZA          ""       ""    ""       -30.56 22.94   2886331  86376         0 2799955 2021-09-21T00~
+    ## # A tibble: 575 x 10
+    ##    Country      CountryCode Province City  CityCode Lat    Lon     Cases Status    Date                
+    ##    <chr>        <chr>       <chr>    <chr> <chr>    <chr>  <chr>   <int> <chr>     <chr>               
+    ##  1 South Africa ZA          ""       ""    ""       -30.56 22.94 2898888 confirmed 2021-09-30T00:00:00Z
+    ##  2 South Africa ZA          ""       ""    ""       -30.56 22.94 2898888 confirmed 2021-09-29T00:00:00Z
+    ##  3 South Africa ZA          ""       ""    ""       -30.56 22.94 2898888 confirmed 2021-09-28T00:00:00Z
+    ##  4 South Africa ZA          ""       ""    ""       -30.56 22.94 2897521 confirmed 2021-09-27T00:00:00Z
+    ##  5 South Africa ZA          ""       ""    ""       -30.56 22.94 2896943 confirmed 2021-09-26T00:00:00Z
+    ##  6 South Africa ZA          ""       ""    ""       -30.56 22.94 2895976 confirmed 2021-09-25T00:00:00Z
+    ##  7 South Africa ZA          ""       ""    ""       -30.56 22.94 2894342 confirmed 2021-09-24T00:00:00Z
+    ##  8 South Africa ZA          ""       ""    ""       -30.56 22.94 2892081 confirmed 2021-09-23T00:00:00Z
+    ##  9 South Africa ZA          ""       ""    ""       -30.56 22.94 2889298 confirmed 2021-09-22T00:00:00Z
+    ## 10 South Africa ZA          ""       ""    ""       -30.56 22.94 2886331 confirmed 2021-09-21T00:00:00Z
     ## # ... with 565 more rows
 
 ``` r
@@ -570,4 +591,50 @@ print(another)
     ## $message
     ## [1] "for performance reasons, please specify a province"
 
-## Data Exporation
+# Data Exporation
+
+Make a scatter plot of values for the country summary with continents in
+different colors or totals in bars. Maybe both
+
+``` r
+regionData <- covidSummary("country")
+regionData
+```
+
+    ## # A tibble: 192 x 11
+    ##    Country             CountryCode Slug                NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date     Continent
+    ##    <chr>               <chr>       <chr>                      <int>          <int>     <int>       <int>        <int>          <int> <chr>    <chr>    
+    ##  1 Afghanistan         AF          afghanistan                    0         155128         0        7204            0              0 2021-09~ Asia     
+    ##  2 Albania             AL          albania                        0         169462         0        2685            0              0 2021-09~ Europe   
+    ##  3 Algeria             DZ          algeria                        0         203198         0        5805            0              0 2021-09~ Africa   
+    ##  4 Andorra             AD          andorra                        0          15209         0         130            0              0 2021-09~ Europe   
+    ##  5 Angola              AO          angola                         0          56583         0        1537            0              0 2021-09~ Africa   
+    ##  6 Antigua and Barbuda AG          antigua-and-barbuda            0           3188         0          76            0              0 2021-09~ Americas 
+    ##  7 Argentina           AR          argentina                      0        5255261         0      115130            0              0 2021-09~ Americas 
+    ##  8 Armenia             AM          armenia                        0         260675         0        5299            0              0 2021-09~ Asia     
+    ##  9 Australia           AU          australia                   2400         105123        12        1291            0              0 2021-09~ Oceania  
+    ## 10 Austria             AT          austria                        0         741046         0       10998            0              0 2021-09~ Europe   
+    ## # ... with 182 more rows
+
+``` r
+ggplot(data = regionData, aes(x = NewDeaths, y = NewConfirmed)) + 
+  geom_point(aes(color = Continent))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
+
+``` r
+ggplot(data = regionData, aes(x = Continent, y = NewConfirmed)) + 
+  geom_bar(stat = "identity") +
+  labs(title = "New Confirmed Cases by Continent")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-56-1.png)<!-- -->
+
+``` r
+ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) + 
+  geom_bar(stat = "identity") +
+  labs(title = "Total Confirmed Cases by Continent")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-56-2.png)<!-- -->
