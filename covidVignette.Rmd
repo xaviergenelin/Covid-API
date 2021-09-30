@@ -11,6 +11,8 @@ output:
 ############## Current idea of what to do with this
 Rework the live, total, and oneDay functions to allow the user to select a date range, province, and city/city code. Probably just the city because the code was a little odd. Not sure how it's choosing that. I should be able to print the list of options from the choices by using `toString(sort(unique(data$City)))`. Maybe make a function for that too, idk. 
 
+Maybe having a function for live, total and oneday isn't the way to go?
+
 The current issue is some of the urls don't work in the same order by just adding on things at the end. I'll have to go into the API site to see which one should be used for what the user might filter on. 
 
 After that the visuals/EDA should be it for creating the vignette and then move on to the blog and stuff. 
@@ -60,11 +62,12 @@ urls for each type to refer back to
 
 ```{r}
 # Day one all status
-getAPI <- GET("https://api.covid19api.com/dayone/country/south-africa")
+getAPI <- GET("https://api.covid19api.com/dayone/country/south-africa/status/confirmed/live")
 
 dat <- fromJSON(rawToChar(getAPI$content))
 
 test1 <- as_tibble(dat)
+test1
 test1 %>% arrange(desc(Date))
 
 test1$continent <- countrycode(test1$Country, origin = "country.name", destination = "continent")
@@ -349,8 +352,25 @@ print(another)
 
 
 
-## Data Exporation
+# Data Exporation
 
+Make a scatter plot of values for the country summary with continents in different colors or totals in bars. Maybe both
+```{r}
+regionData <- covidSummary("country")
+regionData
+ggplot(data = regionData, aes(x = NewDeaths, y = NewConfirmed)) + 
+  geom_point(aes(color = Continent))
+```
+
+```{r}
+ggplot(data = regionData, aes(x = Continent, y = NewConfirmed)) + 
+  geom_bar(stat = "identity") +
+  labs(title = "New Confirmed Cases by Continent")
+
+ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) + 
+  geom_bar(stat = "identity") +
+  labs(title = "Total Confirmed Cases by Continent")
+```
 
 
 
