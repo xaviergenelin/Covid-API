@@ -1,12 +1,22 @@
 ---
 title: "Covid Vignette"
 author: "Xavier Genelin"
-date: "9/29/2021"
+date: "9/30/2021"
 output: 
   github_document:
     toc: True
     html_preview: False
 ---
+
+############## Current idea of what to do with this
+I have the function created for the global and country summaries. Add in the regions to allow the user to select a specific region for the countries, can't do that for the global one
+
+Rework the live, total, and oneDay functions to allow the user to select a date range, province, and city/city code. Probably just the city because the code was a little odd. Not sure how it's choosing that. I should be able to print the list of options from the choices by using `toString(sort(unique(data$City)))`. Maybe make a function for that too, idk. 
+
+The current issue is some of the urls don't work in the same order by just adding on things at the end. I'll have to go into the API site to see which one should be used for what the user might filter on. 
+
+After that the visuals/EDA should be it for creating the vignette and then move on to the blog and stuff. 
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -18,17 +28,63 @@ This document is a vignette that'll show how we can retrieve data from an API an
 
 To be able to interact with the API and manipulate the data we want to return, the following packages will need to be installed and used:
 
--`tidyverse`  
--`httr`  
--`jsonlite`  
+*`tidyverse`: this package will allow us to manipulate and visualize the data  
+*`httr`: gives us a response object from the API url   
+*`jsonlite`: allows us to interact with the API  
+* `countrycode`: this lets us tie the country name to the continent which is defined by the World Bank Development Indicators   
 
 ```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(httr)
 library(jsonlite)
+library(countrycode)
 ```
 
-## Functions
+
+
+
+urls for each type to refer back to 
+```{r}
+#day one: "https://api.covid19api.com/dayone/country/south-africa"
+#by country: "https://api.covid19api.com/country/south-africa"
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+```
+
+```{r}
+# Day one all status
+getAPI <- GET("https://api.covid19api.com/dayone/country/south-africa")
+
+dat <- fromJSON(rawToChar(getAPI$content))
+
+test1 <- as_tibble(dat)
+test1 %>% arrange(desc(Date))
+
+test1$continent <- countrycode(test1$Country, origin = "country.name", destination = "continent")
+```
+
+```{r}
+# day one live 
+getAPI <- GET("https://api.covid19api.com/dayone/country/south-africa/status/deaths/live")
+
+dat <- fromJSON(rawToChar(getAPI$content))
+
+test2 <- as_tibble(dat)
+test2 %>% arrange(desc(Date))
+test2
+```
+
+
+### Functions
 
 This will be used in each of the functions to get the data from the API. Just an example for easy copying
 ```{r}
@@ -125,10 +181,16 @@ data %>% filter(City == "Dane")
 ```
 
 ```{r}
-getAPI <- GET("https://api.covid19api.com/dayone/country/united-states?province=utah")
-dat <- fromJSON(rawToChar(getAPI$content))
-data <- as_tibble(dat)
-data
+#getAPI <- GET("https://api.covid19api.com/dayone/country/united-states?province=wisconsin")
+#dat <- fromJSON(rawToChar(getAPI$content))
+#data <- as_tibble(dat)
+#data
+county <- toString(sort(unique(data$City)))
+print(paste("Please select one of the following:", county))
+print(county)
+
+teststring <- toString(county)
+teststring
 ```
 
 
