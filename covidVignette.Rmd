@@ -39,7 +39,7 @@ as_tibble(dat)
 ```{r}
 # The user can either choose a global summary or country
 
-covidSummary <- function(type = "global"){
+covidSummary <- function(type){
   ### you can either select global or country to see the global summary or 
   # the summary by country
   getAPI <- GET("https://api.covid19api.com/summary")
@@ -53,13 +53,14 @@ covidSummary <- function(type = "global"){
     output <- output %>% select("Country", "CountryCode", "Slug", "NewConfirmed", 
                                 "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date")
   }
+
   return(output)
 }
 ```
 
 ```{r}
-a <- covidSummary("country")
-a
+covidSummary("country")
+
 ```
 
 ```{r}
@@ -142,7 +143,7 @@ total(country= "AL", IDType = "id", case = "recovered")
 
 Live data for each country
 ```{r}
-live <- function(country, IDType, case = "all") {
+live <- function(country, IDType, case = "all", province = "all") {
   # get the total covid numbers for a country by day
   # user has the option to get all numbers or just confirmed, recovered, or deaths
   if(case == "all"){
@@ -161,21 +162,29 @@ live <- function(country, IDType, case = "all") {
     dat <- fromJSON(rawToChar(getAPI$content))
     output <- as_tibble(dat)
   } 
+  # the country will be missing but it will still have a dataframe of more than 1 row if there's something wrong with the output
+  # this will check to see if that error happened to let the user know
   if(output[1,1] == ""){
     stop("ERROR: make sure case is either all, confirmed, recovered, or deaths")
   }
+  
+  if(province != "all"){
+    output <- output %>% filter(Province == province)
+  }
+  
   return(output)
 }
 ```
 
 ```{r}
-live(country = "US", IDType = "id")
+live(country = "US", IDType = "id", case = " all", province = "Wisconsin")
+
 ```
 
 
 Day one data for each country
 ```{r}
-dayOne <- function(country, IDType, case = "all") {
+dayOne <- function(country, IDType, case = "all", province = "all") {
   # get the total covid numbers for a country by day
   # user has the option to get all numbers or just confirmed, recovered, or deaths
   if(case == "all"){
@@ -197,12 +206,17 @@ dayOne <- function(country, IDType, case = "all") {
   if(output[1,1] == ""){
     stop("ERROR: make sure case is either all, confirmed, recovered, or deaths")
   }
+  
+  if(province != "all"){
+    output <- output %>% filter(Province == province)
+  }
+  
   return(output)
 }
 ```
 
 ```{r}
-dayOne(country = "US", IDType = "id")
+dayOne(country = "AU", IDType = "id", case = "deaths")
 ```
 
 Create one final function that uses the other functions above to collect whatever data is needed
@@ -214,15 +228,19 @@ covid <- function(func, ...){
     output <- live(...)
   } else if(func == "dayOne"){
     output <- dayOne(...)
+  } else if(func == "summary"){
+    output <- covidSummary(...)
   } else {
-    stop("ERROR: choose total, live, or dayOne as function")
+    stop("ERROR: choose total, live, dayOne, or summary as function")
   }
   return(output)
 }
 ```
 
 ```{r}
-covid("live", "US", "id", "deaths")
+covid("summary", "country")
+
+covid("live", "gb", "id", "confirmed") %>% arrange(Province, Date) #%>% filter(Province == "Wisconsin")
 ```
 
 Trying to get the province since some countries like the united states won't allow for the whole thing to be brought in because it's too large.
