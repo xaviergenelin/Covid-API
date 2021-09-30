@@ -58,6 +58,9 @@ urls for each type to refer back to
 #
 #
 #
+cities <- c("Wake", "Durham", "Johnston")
+
+paste("Please select: ", paste(cities, collapse = ","), sep = " ")
 ```
 
 ```{r}
@@ -372,5 +375,13 @@ ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) +
   labs(title = "Total Confirmed Cases by Continent")
 ```
 
+Trying something quick. Plot the top 10-15 countires with the highest new confirmed or new deaths or something
+```{r}
+check <- regionData %>% arrange(desc(NewConfirmed)) %>% slice(1:15)
+
+  ggplot(data = check, aes(x = Country, y = NewConfirmed)) + 
+  geom_bar(stat = "identity") +
+  labs(title = "Total Confirmed Cases by Continent")
+```
 
 
