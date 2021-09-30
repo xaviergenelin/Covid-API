@@ -202,7 +202,7 @@ dayOne <- function(country, IDType, case = "all") {
 ```
 
 ```{r}
-dayOne(country = "AL", IDType = "id")
+dayOne(country = "US", IDType = "id")
 ```
 
 Create one final function that uses the other functions above to collect whatever data is needed
@@ -217,7 +217,19 @@ covid <- function(func, ...){
   } else {
     stop("ERROR: choose total, live, or dayOne as function")
   }
+  return(output)
 }
+```
+
+```{r}
+covid("live", "US", "id", "deaths")
+```
+
+Trying to get the province since some countries like the united states won't allow for the whole thing to be brought in because it's too large.
+```{r}
+test <- GET("https://api.covid19api.com/dayone/country/united-states")
+another <- fromJSON(rawToChar(test$content))
+print(another)
 ```
 
 
