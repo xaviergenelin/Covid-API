@@ -300,7 +300,7 @@ ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) +
   labs(title = "Total Confirmed Cases by Continent")
 ```
 
-Plot of the top 15 countires with the highest death percentage with confirmed cases above 100
+Plot of the top 15 countires with the highest death percentage with confirmed cases above 100. The bars have the total confirmed cases to give us an idea of what the percentage of deaths represents.
 
 ```{r}
 check <- regionData %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDeath)) %>% slice(1:15)
@@ -308,7 +308,22 @@ check <- regionData %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDea
 ggplot(data = check, aes(x = Country, y = percentDeath)) + 
   geom_bar(stat = "identity", aes(fill = Continent)) +
   labs(title = "Top 15 Countries by Percentage of Deaths", y = "Percent of Deaths" ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = TotalConfirmed), size = 2.5, vjust = -0.2)
+```
+
+We can see there's a decent mix of continents that have the highest death percentages overall, but this may not be a good indicator of how they're doing recently. As we can see with Yemen, they have a large percentage but they also have less than 10,000 confirmed cases. This may be a country with a small population so this is still significant, or they have done a good job of containing the virus and reducing spread. This could be something that can be analyze further if necessary.
+
+Next we'll look at the new confirmed cases 
+
+
+```{r}
+country <- covid("summary", "country")
+```
+
+```{r}
+ggplot(country, aes(x = NewConfirmed)) +
+  geom_histogram(binwidth = 1000)
 ```
 
 
