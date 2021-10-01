@@ -113,7 +113,9 @@ covidSummary <- function(type, continent = "all"){
   getAPI <- GET("https://api.covid19api.com/summary")
   dat <- fromJSON(rawToChar(getAPI$content))
   
+  # This lets the user type in capital letters for the type and continent without erroring it out
   type <- tolower(type)
+
   
   if(type == "global"){
     output <- as_tibble(dat$Global)
@@ -134,9 +136,11 @@ covidSummary <- function(type, continent = "all"){
     output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
     
       if(continent != "all"){
+        continent <- str_to_title(continent)
         output <- output %>% filter(Continent == continent)
       
         if(nrow(output) == 0){
+          # If the user selects a continent that isn't in the data set, it provides a list to choose from
           stop(paste("Please select one of the following continents: ", paste(continents, collapse = ","), sep = " "))
         }
       }
@@ -176,6 +180,9 @@ getCountry <- function(country, IDType){
   getAPI <- GET("https://api.covid19api.com/countries")
   dat <- fromJSON(rawToChar(getAPI$content))
   data <- as_tibble(dat)
+  
+  # This lets the user type in with capital letters but won't error out the function
+  IDtype <- tolower(IDType)
   
   if(IDType == "country"){
     output <- data %>% filter(Country == country) %>% select(Slug)
@@ -232,13 +239,17 @@ teststring
 
 The `total` function collects data from the API 
 
+
+########### add in a time filter to this 
 ```{r}
-total <- function(country, IDType, case = "all") {
+total <- function(country, IDType, status = "all") {
   # get the total covid numbers for a country by day
   # user has the option to get all numbers or just confirmed, recovered, or deaths
   # Find an easy way to get the date in here along with the other functions
   # Date needs to be added in after the country and case portions
-  if(case == "all"){
+  status <- tolower(status)
+  
+  if(status == "all"){
     main <- "https://api.covid19api.com/total/country/"
     country <- getCountry(country, IDType)
     url <- paste0(main, country)
@@ -246,13 +257,17 @@ total <- function(country, IDType, case = "all") {
     dat <- fromJSON(rawToChar(getAPI$content))
     output <- as_tibble(dat)
     
-  } else if(case != "all"){
+    output <- output %>% mutate(Date = as.Date(Date))
+    
+  } else if(status != "all"){
     main <- "https://api.covid19api.com/total/country/"
     country <- getCountry(country, IDType)
-    url <- paste0(main, country, "/status/", case)
+    url <- paste0(main, country, "/status/", status)
     getAPI <- GET(url)
     dat <- fromJSON(rawToChar(getAPI$content))
     output <- as_tibble(dat)
+    
+    output <- output %>% mutate(Date = as.Date(Date))
   } 
   if(output[1,1] == ""){
     stop("ERROR: make sure case is either all, confirmed, recovered, or deaths")
@@ -260,8 +275,10 @@ total <- function(country, IDType, case = "all") {
   return(output)
 }
 
-total(country= "AL", IDType = "id", case = "recovered")
+total(country= "US", IDType = "id", status = "Deaths")
 ```
+
+## `live`
 
 Live data for each country
 ```{r}

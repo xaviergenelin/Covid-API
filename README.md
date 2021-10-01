@@ -6,6 +6,8 @@ Xavier Genelin
 -   [Packages](#packages)
 -   [Functions](#functions)
     -   [`covidSummary`](#covidsummary)
+    -   [`getCountry`](#getcountry)
+    -   [`live`](#live)
 -   [Data Exporation](#data-exporation)
 
 ############## Current idea of what to do with this
@@ -69,7 +71,12 @@ urls for each type to refer back to
 #
 #
 #
+cities <- c("Wake", "Durham", "Johnston")
+
+paste("Please select: ", paste(cities, collapse = ","), sep = " ")
 ```
+
+    ## [1] "Please select:  Wake,Durham,Johnston"
 
 ``` r
 # Day one all status
@@ -81,7 +88,7 @@ test1 <- as_tibble(dat)
 test1
 ```
 
-    ## # A tibble: 575 x 10
+    ## # A tibble: 576 x 10
     ##    Country      CountryCode Province City  CityCode Lat    Lon   Cases Status    Date                
     ##    <chr>        <chr>       <chr>    <chr> <chr>    <chr>  <chr> <int> <chr>     <chr>               
     ##  1 South Africa ZA          ""       ""    ""       -30.56 22.94     1 confirmed 2020-03-05T00:00:00Z
@@ -94,26 +101,26 @@ test1
     ##  8 South Africa ZA          ""       ""    ""       -30.56 22.94    17 confirmed 2020-03-12T00:00:00Z
     ##  9 South Africa ZA          ""       ""    ""       -30.56 22.94    24 confirmed 2020-03-13T00:00:00Z
     ## 10 South Africa ZA          ""       ""    ""       -30.56 22.94    38 confirmed 2020-03-14T00:00:00Z
-    ## # ... with 565 more rows
+    ## # ... with 566 more rows
 
 ``` r
 test1 %>% arrange(desc(Date))
 ```
 
-    ## # A tibble: 575 x 10
+    ## # A tibble: 576 x 10
     ##    Country      CountryCode Province City  CityCode Lat    Lon     Cases Status    Date                
     ##    <chr>        <chr>       <chr>    <chr> <chr>    <chr>  <chr>   <int> <chr>     <chr>               
-    ##  1 South Africa ZA          ""       ""    ""       -30.56 22.94 2898888 confirmed 2021-09-30T00:00:00Z
-    ##  2 South Africa ZA          ""       ""    ""       -30.56 22.94 2898888 confirmed 2021-09-29T00:00:00Z
-    ##  3 South Africa ZA          ""       ""    ""       -30.56 22.94 2898888 confirmed 2021-09-28T00:00:00Z
-    ##  4 South Africa ZA          ""       ""    ""       -30.56 22.94 2897521 confirmed 2021-09-27T00:00:00Z
-    ##  5 South Africa ZA          ""       ""    ""       -30.56 22.94 2896943 confirmed 2021-09-26T00:00:00Z
-    ##  6 South Africa ZA          ""       ""    ""       -30.56 22.94 2895976 confirmed 2021-09-25T00:00:00Z
-    ##  7 South Africa ZA          ""       ""    ""       -30.56 22.94 2894342 confirmed 2021-09-24T00:00:00Z
-    ##  8 South Africa ZA          ""       ""    ""       -30.56 22.94 2892081 confirmed 2021-09-23T00:00:00Z
-    ##  9 South Africa ZA          ""       ""    ""       -30.56 22.94 2889298 confirmed 2021-09-22T00:00:00Z
-    ## 10 South Africa ZA          ""       ""    ""       -30.56 22.94 2886331 confirmed 2021-09-21T00:00:00Z
-    ## # ... with 565 more rows
+    ##  1 South Africa ZA          ""       ""    ""       -30.56 22.94 2902672 confirmed 2021-10-01T00:00:00Z
+    ##  2 South Africa ZA          ""       ""    ""       -30.56 22.94 2902672 confirmed 2021-09-30T00:00:00Z
+    ##  3 South Africa ZA          ""       ""    ""       -30.56 22.94 2898888 confirmed 2021-09-29T00:00:00Z
+    ##  4 South Africa ZA          ""       ""    ""       -30.56 22.94 2898888 confirmed 2021-09-28T00:00:00Z
+    ##  5 South Africa ZA          ""       ""    ""       -30.56 22.94 2897521 confirmed 2021-09-27T00:00:00Z
+    ##  6 South Africa ZA          ""       ""    ""       -30.56 22.94 2896943 confirmed 2021-09-26T00:00:00Z
+    ##  7 South Africa ZA          ""       ""    ""       -30.56 22.94 2895976 confirmed 2021-09-25T00:00:00Z
+    ##  8 South Africa ZA          ""       ""    ""       -30.56 22.94 2894342 confirmed 2021-09-24T00:00:00Z
+    ##  9 South Africa ZA          ""       ""    ""       -30.56 22.94 2892081 confirmed 2021-09-23T00:00:00Z
+    ## 10 South Africa ZA          ""       ""    ""       -30.56 22.94 2889298 confirmed 2021-09-22T00:00:00Z
+    ## # ... with 566 more rows
 
 ``` r
 test1$continent <- countrycode(test1$Country, origin = "country.name", destination = "continent")
@@ -129,26 +136,26 @@ test2 <- as_tibble(dat)
 test2 %>% arrange(desc(Date))
 ```
 
-    ## # A tibble: 575 x 10
+    ## # A tibble: 576 x 10
     ##    Country      CountryCode Province City  CityCode Lat    Lon   Cases Status Date                
     ##    <chr>        <chr>       <chr>    <chr> <chr>    <chr>  <chr> <int> <chr>  <chr>               
-    ##  1 South Africa ZA          ""       ""    ""       -30.56 22.94 87417 deaths 2021-09-30T00:00:00Z
-    ##  2 South Africa ZA          ""       ""    ""       -30.56 22.94 87417 deaths 2021-09-29T00:00:00Z
-    ##  3 South Africa ZA          ""       ""    ""       -30.56 22.94 87417 deaths 2021-09-28T00:00:00Z
-    ##  4 South Africa ZA          ""       ""    ""       -30.56 22.94 87216 deaths 2021-09-27T00:00:00Z
-    ##  5 South Africa ZA          ""       ""    ""       -30.56 22.94 87052 deaths 2021-09-26T00:00:00Z
-    ##  6 South Africa ZA          ""       ""    ""       -30.56 22.94 87001 deaths 2021-09-25T00:00:00Z
-    ##  7 South Africa ZA          ""       ""    ""       -30.56 22.94 86967 deaths 2021-09-24T00:00:00Z
-    ##  8 South Africa ZA          ""       ""    ""       -30.56 22.94 86655 deaths 2021-09-23T00:00:00Z
-    ##  9 South Africa ZA          ""       ""    ""       -30.56 22.94 86500 deaths 2021-09-22T00:00:00Z
-    ## 10 South Africa ZA          ""       ""    ""       -30.56 22.94 86376 deaths 2021-09-21T00:00:00Z
-    ## # ... with 565 more rows
+    ##  1 South Africa ZA          ""       ""    ""       -30.56 22.94 87626 deaths 2021-10-01T00:00:00Z
+    ##  2 South Africa ZA          ""       ""    ""       -30.56 22.94 87626 deaths 2021-09-30T00:00:00Z
+    ##  3 South Africa ZA          ""       ""    ""       -30.56 22.94 87417 deaths 2021-09-29T00:00:00Z
+    ##  4 South Africa ZA          ""       ""    ""       -30.56 22.94 87417 deaths 2021-09-28T00:00:00Z
+    ##  5 South Africa ZA          ""       ""    ""       -30.56 22.94 87216 deaths 2021-09-27T00:00:00Z
+    ##  6 South Africa ZA          ""       ""    ""       -30.56 22.94 87052 deaths 2021-09-26T00:00:00Z
+    ##  7 South Africa ZA          ""       ""    ""       -30.56 22.94 87001 deaths 2021-09-25T00:00:00Z
+    ##  8 South Africa ZA          ""       ""    ""       -30.56 22.94 86967 deaths 2021-09-24T00:00:00Z
+    ##  9 South Africa ZA          ""       ""    ""       -30.56 22.94 86655 deaths 2021-09-23T00:00:00Z
+    ## 10 South Africa ZA          ""       ""    ""       -30.56 22.94 86500 deaths 2021-09-22T00:00:00Z
+    ## # ... with 566 more rows
 
 ``` r
 test2
 ```
 
-    ## # A tibble: 575 x 10
+    ## # A tibble: 576 x 10
     ##    Country      CountryCode Province City  CityCode Lat    Lon   Cases Status Date                
     ##    <chr>        <chr>       <chr>    <chr> <chr>    <chr>  <chr> <int> <chr>  <chr>               
     ##  1 South Africa ZA          ""       ""    ""       -30.56 22.94     0 deaths 2020-03-05T00:00:00Z
@@ -161,7 +168,7 @@ test2
     ##  8 South Africa ZA          ""       ""    ""       -30.56 22.94     0 deaths 2020-03-12T00:00:00Z
     ##  9 South Africa ZA          ""       ""    ""       -30.56 22.94     0 deaths 2020-03-13T00:00:00Z
     ## 10 South Africa ZA          ""       ""    ""       -30.56 22.94     0 deaths 2020-03-14T00:00:00Z
-    ## # ... with 565 more rows
+    ## # ... with 566 more rows
 
 # Functions
 
@@ -185,10 +192,12 @@ as_tibble(dat)
 covidSummary("global")
 ```
 
-    ## # A tibble: 1 x 7
-    ##   NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date                    
-    ##          <int>          <int>     <int>       <int>        <int>          <int> <chr>                   
-    ## 1       289562      232918565      5970     4771047            0              0 2021-09-30T18:52:53.477Z
+    ## # A tibble: 1 x 8
+    ##   NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date       percentDeath
+    ##          <int>          <int>     <int>       <int>        <int>          <int> <date>            <dbl>
+    ## 1       289050      233403939      5901     4779803            0              0 2021-10-01         2.05
+
+## `covidSummary`
 
 This first function gets access to the covid summary data and allows the
 user to choose either a global or country summary. The global summary
@@ -196,8 +205,11 @@ will return one row with data on NewConfirmed, TotalConfirmed,
 NewDeaths, TotalDeaths, NewRecovered, and TotalRecovered along with the
 date that this data is from. The country data will show the same data
 for 192 countries as well as their country name, country code, and slug.
-
-## `covidSummary`
+We’re also adding in the continent based on the country. If the user
+writes in a continent while trying to access the global information, it
+will still return the global information. For both the global and
+country summaries, this function will create a new variable that
+calculates the total percent that have died from covid.
 
 ``` r
 # The user can either choose a global summary or country
@@ -208,8 +220,15 @@ covidSummary <- function(type, continent = "all"){
   getAPI <- GET("https://api.covid19api.com/summary")
   dat <- fromJSON(rawToChar(getAPI$content))
   
+  # This lets the user type in capital letters for the type and continent without erroring it out
+  type <- tolower(type)
+
+  
   if(type == "global"){
     output <- as_tibble(dat$Global)
+    
+    output <- output %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
+    
   } else if(type == "country"){
     output <- as_tibble(dat$Countries)
     
@@ -219,19 +238,45 @@ covidSummary <- function(type, continent = "all"){
     output$Continent <- countrycode(output$Country, origin = "country.name", destination = "continent")
     
     output$Continent[is.na(output$Continent)] <- "Europe"
+    continents <- unique(output$Continent)
+    
+    output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
+    
+      if(continent != "all"){
+        continent <- str_to_title(continent)
+        output <- output %>% filter(Continent == continent)
+      
+        if(nrow(output) == 0){
+          # If the user selects a continent that isn't in the data set, it provides a list to choose from
+          stop(paste("Please select one of the following continents: ", paste(continents, collapse = ","), sep = " "))
+        }
+      }
   }
   
-  if(continent != "all"){
-    output <- output %>% filter(Continent == continent)
-  }
+
 
   return(output)
 }
 ```
 
 ``` r
-ex <- covidSummary("country", continent = "Europe")
+covidSummary("country")
 ```
+
+    ## # A tibble: 192 x 10
+    ##    Country             NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date       Continent percentDeath
+    ##    <chr>                      <int>          <int>     <int>       <int>        <int>          <int> <date>     <chr>            <dbl>
+    ##  1 Afghanistan                    0         155174         0        7204            0              0 2021-10-01 Asia              4.64
+    ##  2 Albania                        0         170131         0        2698            0              0 2021-10-01 Europe            1.59
+    ##  3 Algeria                        0         203359         0        5812            0              0 2021-10-01 Africa            2.86
+    ##  4 Andorra                        0          15222         0         130            0              0 2021-10-01 Europe            0.85
+    ##  5 Angola                         0          56583         0        1537            0              0 2021-10-01 Africa            2.72
+    ##  6 Antigua and Barbuda            0           3231         0          79            0              0 2021-10-01 Americas          2.45
+    ##  7 Argentina                      0        5256902         0      115179            0              0 2021-10-01 Americas          2.19
+    ##  8 Armenia                        0         261697         0        5319            0              0 2021-10-01 Asia              2.03
+    ##  9 Australia                   2058         107181        20        1311            0              0 2021-10-01 Oceania           1.22
+    ## 10 Austria                        0         743095         0       11009            0              0 2021-10-01 Europe            1.48
+    ## # ... with 182 more rows
 
 ``` r
 getAPI <- GET("https://api.covid19api.com/countries")
@@ -242,19 +287,21 @@ as_tibble(dat)
 ```
 
     ## # A tibble: 248 x 3
-    ##    Country                Slug             ISO2 
-    ##    <chr>                  <chr>            <chr>
-    ##  1 Costa Rica             costa-rica       CR   
-    ##  2 French Polynesia       french-polynesia PF   
-    ##  3 Tunisia                tunisia          TN   
-    ##  4 Macedonia, Republic of macedonia        MK   
-    ##  5 Virgin Islands, US     virgin-islands   VI   
-    ##  6 Bahrain                bahrain          BH   
-    ##  7 Bhutan                 bhutan           BT   
-    ##  8 Kenya                  kenya            KE   
-    ##  9 China                  china            CN   
-    ## 10 Israel                 israel           IL   
+    ##    Country                      Slug                      ISO2 
+    ##    <chr>                        <chr>                     <chr>
+    ##  1 Tanzania, United Republic of tanzania                  TZ   
+    ##  2 Gambia                       gambia                    GM   
+    ##  3 Italy                        italy                     IT   
+    ##  4 Macao, SAR China             macao-sar-china           MO   
+    ##  5 Saint Pierre and Miquelon    saint-pierre-and-miquelon PM   
+    ##  6 South Africa                 south-africa              ZA   
+    ##  7 Zimbabwe                     zimbabwe                  ZW   
+    ##  8 Isle of Man                  isle-of-man               IM   
+    ##  9 Luxembourg                   luxembourg                LU   
+    ## 10 Lao PDR                      lao-pdr                   LA   
     ## # ... with 238 more rows
+
+## `getCountry`
 
 The next function will allow the user to either type out the country
 name, country code, or slug it will return the slug value. This is
@@ -273,6 +320,9 @@ getCountry <- function(country, IDType){
   getAPI <- GET("https://api.covid19api.com/countries")
   dat <- fromJSON(rawToChar(getAPI$content))
   data <- as_tibble(dat)
+  
+  # This lets the user type in with capital letters but won't error out the function
+  IDtype <- tolower(IDType)
   
   if(IDType == "country"){
     output <- data %>% filter(Country == country) %>% select(Slug)
@@ -303,7 +353,7 @@ data <- as_tibble(dat)
 data %>% arrange(City)
 ```
 
-    ## # A tibble: 28,080 x 10
+    ## # A tibble: 28,170 x 10
     ##    Country                  CountryCode Province City  CityCode Lat   Lon    Cases Status    Date                
     ##    <chr>                    <chr>       <chr>    <chr> <chr>    <chr> <chr>  <int> <chr>     <chr>               
     ##  1 United States of America US          Ohio     Adams 39001    38.85 -83.47   706 confirmed 2020-11-22T00:00:00Z
@@ -316,9 +366,10 @@ data %>% arrange(City)
     ##  8 United States of America US          Ohio     Adams 39001    38.85 -83.47   869 confirmed 2020-11-29T00:00:00Z
     ##  9 United States of America US          Ohio     Adams 39001    38.85 -83.47   877 confirmed 2020-11-30T00:00:00Z
     ## 10 United States of America US          Ohio     Adams 39001    38.85 -83.47   892 confirmed 2020-12-01T00:00:00Z
-    ## # ... with 28,070 more rows
+    ## # ... with 28,160 more rows
 
 ``` r
+# Dane county in Wisconsin
 getAPI <- GET("https://api.covid19api.com/country/united-states?province=wisconsin")
 dat <- fromJSON(rawToChar(getAPI$content))
 data <- as_tibble(dat)
@@ -326,7 +377,7 @@ data <- as_tibble(dat)
 data %>% filter(City == "Dane")
 ```
 
-    ## # A tibble: 312 x 13
+    ## # A tibble: 313 x 13
     ##    ID                                   Country         CountryCode Province  City  CityCode Lat   Lon   Confirmed Deaths Recovered Active Date        
     ##    <chr>                                <chr>           <chr>       <chr>     <chr> <chr>    <chr> <chr>     <int>  <int>     <int>  <int> <chr>       
     ##  1 177b98c7-a92e-4ce8-8d98-fb895025f6f0 United States ~ US          Wisconsin Dane  55025    43.07 -89.~     25554     78         0  25476 2020-11-22T~
@@ -339,7 +390,7 @@ data %>% filter(City == "Dane")
     ##  8 cf596f72-7105-4651-9b4a-3763ca6f9ec1 United States ~ US          Wisconsin Dane  55025    43.07 -89.~     28017     83         0  27934 2020-11-29T~
     ##  9 8188f23a-54a3-4b59-99e1-8bab94af7d0e United States ~ US          Wisconsin Dane  55025    43.07 -89.~     28265     83         0  28182 2020-11-30T~
     ## 10 329ad997-9fc6-46c4-8d6f-2a6abfc81427 United States ~ US          Wisconsin Dane  55025    43.07 -89.~     28370     84         0  28286 2020-12-01T~
-    ## # ... with 302 more rows
+    ## # ... with 303 more rows
 
 ``` r
 #getAPI <- GET("https://api.covid19api.com/dayone/country/united-states?province=wisconsin")
@@ -367,13 +418,17 @@ teststring
 
 The `total` function collects data from the API
 
+########### add in a time filter to this
+
 ``` r
-total <- function(country, IDType, case = "all") {
+total <- function(country, IDType, status = "all") {
   # get the total covid numbers for a country by day
   # user has the option to get all numbers or just confirmed, recovered, or deaths
   # Find an easy way to get the date in here along with the other functions
   # Date needs to be added in after the country and case portions
-  if(case == "all"){
+  status <- tolower(status)
+  
+  if(status == "all"){
     main <- "https://api.covid19api.com/total/country/"
     country <- getCountry(country, IDType)
     url <- paste0(main, country)
@@ -381,13 +436,17 @@ total <- function(country, IDType, case = "all") {
     dat <- fromJSON(rawToChar(getAPI$content))
     output <- as_tibble(dat)
     
-  } else if(case != "all"){
+    output <- output %>% mutate(Date = as.Date(Date))
+    
+  } else if(status != "all"){
     main <- "https://api.covid19api.com/total/country/"
     country <- getCountry(country, IDType)
-    url <- paste0(main, country, "/status/", case)
+    url <- paste0(main, country, "/status/", status)
     getAPI <- GET(url)
     dat <- fromJSON(rawToChar(getAPI$content))
     output <- as_tibble(dat)
+    
+    output <- output %>% mutate(Date = as.Date(Date))
   } 
   if(output[1,1] == ""){
     stop("ERROR: make sure case is either all, confirmed, recovered, or deaths")
@@ -395,23 +454,25 @@ total <- function(country, IDType, case = "all") {
   return(output)
 }
 
-total(country= "AL", IDType = "id", case = "recovered")
+total(country= "US", IDType = "id", status = "Deaths")
 ```
 
-    ## # A tibble: 617 x 10
-    ##    Country CountryCode Province City  CityCode Lat   Lon   Cases Status    Date                
-    ##    <chr>   <chr>       <chr>    <chr> <chr>    <chr> <chr> <int> <chr>     <chr>               
-    ##  1 Albania ""          ""       ""    ""       0     0         0 recovered 2020-01-22T00:00:00Z
-    ##  2 Albania ""          ""       ""    ""       0     0         0 recovered 2020-01-23T00:00:00Z
-    ##  3 Albania ""          ""       ""    ""       0     0         0 recovered 2020-01-24T00:00:00Z
-    ##  4 Albania ""          ""       ""    ""       0     0         0 recovered 2020-01-25T00:00:00Z
-    ##  5 Albania ""          ""       ""    ""       0     0         0 recovered 2020-01-26T00:00:00Z
-    ##  6 Albania ""          ""       ""    ""       0     0         0 recovered 2020-01-27T00:00:00Z
-    ##  7 Albania ""          ""       ""    ""       0     0         0 recovered 2020-01-28T00:00:00Z
-    ##  8 Albania ""          ""       ""    ""       0     0         0 recovered 2020-01-29T00:00:00Z
-    ##  9 Albania ""          ""       ""    ""       0     0         0 recovered 2020-01-30T00:00:00Z
-    ## 10 Albania ""          ""       ""    ""       0     0         0 recovered 2020-01-31T00:00:00Z
-    ## # ... with 607 more rows
+    ## # A tibble: 618 x 10
+    ##    Country                  CountryCode Province City  CityCode Lat   Lon   Cases Status Date      
+    ##    <chr>                    <chr>       <chr>    <chr> <chr>    <chr> <chr> <int> <chr>  <date>    
+    ##  1 United States of America ""          ""       ""    ""       0     0         0 deaths 2020-01-22
+    ##  2 United States of America ""          ""       ""    ""       0     0         0 deaths 2020-01-23
+    ##  3 United States of America ""          ""       ""    ""       0     0         0 deaths 2020-01-24
+    ##  4 United States of America ""          ""       ""    ""       0     0         0 deaths 2020-01-25
+    ##  5 United States of America ""          ""       ""    ""       0     0         0 deaths 2020-01-26
+    ##  6 United States of America ""          ""       ""    ""       0     0         0 deaths 2020-01-27
+    ##  7 United States of America ""          ""       ""    ""       0     0         0 deaths 2020-01-28
+    ##  8 United States of America ""          ""       ""    ""       0     0         0 deaths 2020-01-29
+    ##  9 United States of America ""          ""       ""    ""       0     0         0 deaths 2020-01-30
+    ## 10 United States of America ""          ""       ""    ""       0     0         0 deaths 2020-01-31
+    ## # ... with 608 more rows
+
+## `live`
 
 Live data for each country
 
@@ -453,7 +514,7 @@ live <- function(country, IDType, case = "all", province = "all") {
 live(country = "US", IDType = "id", case = " all", province = "Wisconsin")
 ```
 
-    ## # A tibble: 97 x 13
+    ## # A tibble: 98 x 13
     ##    ID                                   Country         CountryCode Province  City  CityCode Lat   Lon   Confirmed Deaths Recovered Active Date        
     ##    <chr>                                <chr>           <chr>       <chr>     <chr> <chr>    <chr> <chr>     <int>  <int>     <int>  <int> <chr>       
     ##  1 4352eb34-ce89-4e84-8286-1880014145b3 United States ~ US          Wisconsin ""    ""       44.27 -89.~    677186   8092         0 669094 2021-06-25T~
@@ -466,7 +527,7 @@ live(country = "US", IDType = "id", case = " all", province = "Wisconsin")
     ##  8 78451df8-859a-4607-af75-984423951de8 United States ~ US          Wisconsin ""    ""       44.27 -89.~    677740   8134         0 669606 2021-07-02T~
     ##  9 19ffbac7-0366-4ae2-85d5-e012e7dfc8fe United States ~ US          Wisconsin ""    ""       44.27 -89.~    677859   8135         0 669724 2021-07-03T~
     ## 10 d9231cc8-56e8-4d1f-be54-b19f1ebcedba United States ~ US          Wisconsin ""    ""       44.27 -89.~    677859   8135         0 669724 2021-07-04T~
-    ## # ... with 87 more rows
+    ## # ... with 88 more rows
 
 Day one data for each country
 
@@ -506,7 +567,7 @@ dayOne <- function(country, IDType, case = "all", province = "all") {
 dayOne(country = "AU", IDType = "id", case = "deaths")
 ```
 
-    ## # A tibble: 4,736 x 10
+    ## # A tibble: 4,744 x 10
     ##    Country   CountryCode Province        City  CityCode Lat    Lon    Cases Status Date                
     ##    <chr>     <chr>       <chr>           <chr> <chr>    <chr>  <chr>  <int> <chr>  <chr>               
     ##  1 Australia AU          New South Wales ""    ""       -33.87 151.21     0 deaths 2020-01-26T00:00:00Z
@@ -519,7 +580,7 @@ dayOne(country = "AU", IDType = "id", case = "deaths")
     ##  8 Australia AU          New South Wales ""    ""       -33.87 151.21     0 deaths 2020-01-29T00:00:00Z
     ##  9 Australia AU          Queensland      ""    ""       -27.47 153.03     0 deaths 2020-01-29T00:00:00Z
     ## 10 Australia AU          Queensland      ""    ""       -27.47 153.03     0 deaths 2020-01-30T00:00:00Z
-    ## # ... with 4,726 more rows
+    ## # ... with 4,734 more rows
 
 Create one final function that uses the other functions above to collect
 whatever data is needed
@@ -545,26 +606,26 @@ covid <- function(func, ...){
 covid("summary", "country")
 ```
 
-    ## # A tibble: 192 x 11
-    ##    Country             CountryCode Slug                NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date     Continent
-    ##    <chr>               <chr>       <chr>                      <int>          <int>     <int>       <int>        <int>          <int> <chr>    <chr>    
-    ##  1 Afghanistan         AF          afghanistan                    0         155128         0        7204            0              0 2021-09~ Asia     
-    ##  2 Albania             AL          albania                        0         169462         0        2685            0              0 2021-09~ Europe   
-    ##  3 Algeria             DZ          algeria                        0         203198         0        5805            0              0 2021-09~ Africa   
-    ##  4 Andorra             AD          andorra                        0          15209         0         130            0              0 2021-09~ Europe   
-    ##  5 Angola              AO          angola                         0          56583         0        1537            0              0 2021-09~ Africa   
-    ##  6 Antigua and Barbuda AG          antigua-and-barbuda            0           3188         0          76            0              0 2021-09~ Americas 
-    ##  7 Argentina           AR          argentina                      0        5255261         0      115130            0              0 2021-09~ Americas 
-    ##  8 Armenia             AM          armenia                        0         260675         0        5299            0              0 2021-09~ Asia     
-    ##  9 Australia           AU          australia                   2400         105123        12        1291            0              0 2021-09~ Oceania  
-    ## 10 Austria             AT          austria                        0         741046         0       10998            0              0 2021-09~ Europe   
+    ## # A tibble: 192 x 10
+    ##    Country             NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date       Continent percentDeath
+    ##    <chr>                      <int>          <int>     <int>       <int>        <int>          <int> <date>     <chr>            <dbl>
+    ##  1 Afghanistan                    0         155174         0        7204            0              0 2021-10-01 Asia              4.64
+    ##  2 Albania                        0         170131         0        2698            0              0 2021-10-01 Europe            1.59
+    ##  3 Algeria                        0         203359         0        5812            0              0 2021-10-01 Africa            2.86
+    ##  4 Andorra                        0          15222         0         130            0              0 2021-10-01 Europe            0.85
+    ##  5 Angola                         0          56583         0        1537            0              0 2021-10-01 Africa            2.72
+    ##  6 Antigua and Barbuda            0           3231         0          79            0              0 2021-10-01 Americas          2.45
+    ##  7 Argentina                      0        5256902         0      115179            0              0 2021-10-01 Americas          2.19
+    ##  8 Armenia                        0         261697         0        5319            0              0 2021-10-01 Asia              2.03
+    ##  9 Australia                   2058         107181        20        1311            0              0 2021-10-01 Oceania           1.22
+    ## 10 Austria                        0         743095         0       11009            0              0 2021-10-01 Europe            1.48
     ## # ... with 182 more rows
 
 ``` r
 covid("live", "gb", "id", "confirmed") %>% arrange(Province, Date) #%>% filter(Province == "Wisconsin")
 ```
 
-    ## # A tibble: 1,455 x 13
+    ## # A tibble: 1,470 x 13
     ##    ID                                   Country        CountryCode Province City  CityCode Lat   Lon    Confirmed Deaths Recovered Active Date         
     ##    <chr>                                <chr>          <chr>       <chr>    <chr> <chr>    <chr> <chr>      <int>  <int>     <int>  <int> <chr>        
     ##  1 4bcc437a-bed0-4ed0-91b5-ed12376dc857 United Kingdom GB          Anguilla ""    ""       18.22 -63.07       109      0       109      0 2021-06-25T0~
@@ -577,7 +638,7 @@ covid("live", "gb", "id", "confirmed") %>% arrange(Province, Date) #%>% filter(P
     ##  8 9f9e9fa8-18b0-4c81-aed7-35d7f7ddc4d7 United Kingdom GB          Anguilla ""    ""       18.22 -63.07       109      0       109      0 2021-07-02T0~
     ##  9 383faecc-1405-4af9-9b15-80255d587592 United Kingdom GB          Anguilla ""    ""       18.22 -63.07       109      0       109      0 2021-07-03T0~
     ## 10 190b7980-9088-4b8c-903e-42dbbb800639 United Kingdom GB          Anguilla ""    ""       18.22 -63.07       111      0       109      2 2021-07-04T0~
-    ## # ... with 1,445 more rows
+    ## # ... with 1,460 more rows
 
 Trying to get the province since some countries like the united states
 won’t allow for the whole thing to be brought in because it’s too large.
@@ -601,19 +662,19 @@ regionData <- covidSummary("country")
 regionData
 ```
 
-    ## # A tibble: 192 x 11
-    ##    Country             CountryCode Slug                NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date     Continent
-    ##    <chr>               <chr>       <chr>                      <int>          <int>     <int>       <int>        <int>          <int> <chr>    <chr>    
-    ##  1 Afghanistan         AF          afghanistan                    0         155128         0        7204            0              0 2021-09~ Asia     
-    ##  2 Albania             AL          albania                        0         169462         0        2685            0              0 2021-09~ Europe   
-    ##  3 Algeria             DZ          algeria                        0         203198         0        5805            0              0 2021-09~ Africa   
-    ##  4 Andorra             AD          andorra                        0          15209         0         130            0              0 2021-09~ Europe   
-    ##  5 Angola              AO          angola                         0          56583         0        1537            0              0 2021-09~ Africa   
-    ##  6 Antigua and Barbuda AG          antigua-and-barbuda            0           3188         0          76            0              0 2021-09~ Americas 
-    ##  7 Argentina           AR          argentina                      0        5255261         0      115130            0              0 2021-09~ Americas 
-    ##  8 Armenia             AM          armenia                        0         260675         0        5299            0              0 2021-09~ Asia     
-    ##  9 Australia           AU          australia                   2400         105123        12        1291            0              0 2021-09~ Oceania  
-    ## 10 Austria             AT          austria                        0         741046         0       10998            0              0 2021-09~ Europe   
+    ## # A tibble: 192 x 10
+    ##    Country             NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date       Continent percentDeath
+    ##    <chr>                      <int>          <int>     <int>       <int>        <int>          <int> <date>     <chr>            <dbl>
+    ##  1 Afghanistan                    0         155174         0        7204            0              0 2021-10-01 Asia              4.64
+    ##  2 Albania                        0         170131         0        2698            0              0 2021-10-01 Europe            1.59
+    ##  3 Algeria                        0         203359         0        5812            0              0 2021-10-01 Africa            2.86
+    ##  4 Andorra                        0          15222         0         130            0              0 2021-10-01 Europe            0.85
+    ##  5 Angola                         0          56583         0        1537            0              0 2021-10-01 Africa            2.72
+    ##  6 Antigua and Barbuda            0           3231         0          79            0              0 2021-10-01 Americas          2.45
+    ##  7 Argentina                      0        5256902         0      115179            0              0 2021-10-01 Americas          2.19
+    ##  8 Armenia                        0         261697         0        5319            0              0 2021-10-01 Asia              2.03
+    ##  9 Australia                   2058         107181        20        1311            0              0 2021-10-01 Oceania           1.22
+    ## 10 Austria                        0         743095         0       11009            0              0 2021-10-01 Europe            1.48
     ## # ... with 182 more rows
 
 ``` r
@@ -621,7 +682,7 @@ ggplot(data = regionData, aes(x = NewDeaths, y = NewConfirmed)) +
   geom_point(aes(color = Continent))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ``` r
 ggplot(data = regionData, aes(x = Continent, y = NewConfirmed)) + 
@@ -629,7 +690,7 @@ ggplot(data = regionData, aes(x = Continent, y = NewConfirmed)) +
   labs(title = "New Confirmed Cases by Continent")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-56-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 ``` r
 ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) + 
@@ -637,4 +698,17 @@ ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) +
   labs(title = "Total Confirmed Cases by Continent")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-56-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-25-2.png)<!-- -->
+
+Trying something quick. Plot the top 10-15 countires with the highest
+new confirmed or new deaths or something
+
+``` r
+check <- regionData %>% arrange(desc(NewConfirmed)) %>% slice(1:15)
+
+  ggplot(data = check, aes(x = Country, y = NewConfirmed)) + 
+  geom_bar(stat = "identity") +
+  labs(title = "Total Confirmed Cases by Continent")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
