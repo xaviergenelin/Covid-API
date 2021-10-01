@@ -366,7 +366,7 @@ ggplot(data = regionData, aes(x = Continent, y = NewConfirmed)) +
   labs(title = "New Confirmed Cases by Continent")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
 ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) + 
@@ -374,7 +374,7 @@ ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) +
   labs(title = "Total Confirmed Cases by Continent")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-28-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
 
 Plot of the top 15 countires with the highest death percentage with
 confirmed cases above 100. The bars have the total confirmed cases to
@@ -390,7 +390,7 @@ ggplot(data = check, aes(x = Country, y = percentDeath)) +
   geom_text(aes(label = TotalConfirmed), size = 2.5, vjust = -0.2)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 We can see there’s a decent mix of continents that have the highest
 death percentages overall, but this may not be a good indicator of how
@@ -411,4 +411,4 @@ ggplot(country, aes(x = NewConfirmed)) +
   geom_histogram(binwidth = 500)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
