@@ -100,9 +100,10 @@ as_tibble(dat)
 covidSummary("global")
 ```
 
-This first function gets access to the covid summary data and allows the user to choose either a global or country summary. The global summary will return one row with data on NewConfirmed, TotalConfirmed, NewDeaths, TotalDeaths, NewRecovered, and TotalRecovered along with the date that this data is from. The country data will show the same data for `r nrow(covidSummary("country"))` countries as well as their country name, country code, and slug.
-
 ## `covidSummary`
+
+This first function gets access to the covid summary data and allows the user to choose either a global or country summary. The global summary will return one row with data on NewConfirmed, TotalConfirmed, NewDeaths, TotalDeaths, NewRecovered, and TotalRecovered along with the date that this data is from. The country data will show the same data for `r nrow(covidSummary("country"))` countries as well as their country name, country code, and slug. We're also adding in the continent based on the country. If the user writes in a continent while trying to access the global information, it will still return the global information. For both the global and country summaries, this function will create a new variable that calculates the total percent that have died from covid. 
+
 ```{r}
 # The user can either choose a global summary or country
 
@@ -112,8 +113,13 @@ covidSummary <- function(type, continent = "all"){
   getAPI <- GET("https://api.covid19api.com/summary")
   dat <- fromJSON(rawToChar(getAPI$content))
   
+  type <- tolower(type)
+  
   if(type == "global"){
     output <- as_tibble(dat$Global)
+    
+    output <- output %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
+    
   } else if(type == "country"){
     output <- as_tibble(dat$Countries)
     
@@ -123,20 +129,30 @@ covidSummary <- function(type, continent = "all"){
     output$Continent <- countrycode(output$Country, origin = "country.name", destination = "continent")
     
     output$Continent[is.na(output$Continent)] <- "Europe"
+    continents <- unique(output$Continent)
+    
+    output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
+    
+      if(continent != "all"){
+        output <- output %>% filter(Continent == continent)
+      
+        if(nrow(output) == 0){
+          stop(paste("Please select one of the following continents: ", paste(continents, collapse = ","), sep = " "))
+        }
+      }
   }
   
-  if(continent != "all"){
-    output <- output %>% filter(Continent == continent)
-  }
+
 
   return(output)
 }
 ```
 
 ```{r}
-ex <- covidSummary("country", continent = "Europe")
+covidSummary("country")
 
 ```
+
 
 
 ```{r}
@@ -146,6 +162,8 @@ dat <- fromJSON(rawToChar(getAPI$content))
 
 as_tibble(dat)
 ```
+
+## `getCountry`
 
 The next function will allow the user to either type out the country name, country code, or slug it will return the slug value. This is necessary because country filters need to be the slug, so the user can choose anything and not have later functions error out. So for example, if someone wanted to get data on the United States, they would either have to type in "United States of America", "united-states", "US", or "us".
 
@@ -190,6 +208,7 @@ data %>% arrange(City)
 ```
 
 ```{r}
+# Dane county in Wisconsin
 getAPI <- GET("https://api.covid19api.com/country/united-states?province=wisconsin")
 dat <- fromJSON(rawToChar(getAPI$content))
 data <- as_tibble(dat)
