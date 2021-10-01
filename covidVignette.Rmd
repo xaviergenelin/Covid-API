@@ -323,7 +323,7 @@ country <- covid("summary", "country")
 
 ```{r}
 ggplot(country, aes(x = NewConfirmed)) +
-  geom_histogram(binwidth = 1000)
+  geom_histogram(binwidth = 500)
 ```
 
 

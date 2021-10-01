@@ -12,22 +12,6 @@ Xavier Genelin
     -   [`covid`](#covid)
 -   [Data Exporation](#data-exporation)
 
-############## Current idea of what to do with this
-
-Rework the live, total, and oneDay functions to allow the user to select
-a date range, province, and city/city code. Probably just the city
-because the code was a little odd. Not sure how it’s choosing that. I
-should be able to print the list of options from the choices by using
-`toString(sort(unique(data$City)))`. Maybe make a function for that too,
-idk.
-
-The current issue is some of the urls don’t work in the same order by
-just adding on things at the end. I’ll have to go into the API site to
-see which one should be used for what the user might filter on.
-
-After that the visuals/EDA should be it for creating the vignette and
-then move on to the blog and stuff.
-
 This document is a vignette that’ll show how we can retrieve data from
 an API and perform exploratory analysis. This will use the [Covid
 API](https://covid19api.com/). We will build our own functions that will
@@ -54,6 +38,9 @@ library(httr)
 library(jsonlite)
 library(countrycode)
 ```
+
+This also uses the `state.abb` and `state.name` from the `state`
+dataset.
 
 # Functions
 
@@ -90,6 +77,7 @@ covidSummary <- function(type, continent = "all"){
   if(type == "global"){
     output <- as_tibble(dat$Global)
     
+    # Creates a new variable that calculates the percentage of deaths globally
     output <- output %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
     
   } else if(type == "country"){
@@ -103,6 +91,7 @@ covidSummary <- function(type, continent = "all"){
     output$Continent[is.na(output$Continent)] <- "Europe"
     continents <- unique(output$Continent)
     
+    # This removes unnecessary columns and creates a new column that calculates the percentage of deaths by country
     output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
     
       if(continent != "all"){
@@ -219,6 +208,7 @@ have a status of confirmed, deaths, or recovered
 
 ``` r
 dayOne <- function(country, IDType, status = "all", province = "all", provType, city = "all", fromDate = "", toDate = ""){
+  # This checks to see if there will be an error with the status later on before manipulating the dataset at all
   status <- tolower(status)
   if(!(status %in% c("all", "confirmed", "deaths", "recovered"))){
     stop("Status has to be one of the following: all, confirmed, deaths, recovered")
@@ -306,20 +296,20 @@ test <- as_tibble(dat)
 test
 ```
 
-    ## # A tibble: 17,270 x 10
-    ##    Country                  CountryCode Province      City    CityCode Lat   Lon    Cases Status    Date   
-    ##    <chr>                    <chr>       <chr>         <chr>   <chr>    <chr> <chr>  <int> <chr>     <chr>  
-    ##  1 United States of America US          West Virginia Hancock 54029    40.52 -80.57   519 confirmed 2020-1~
-    ##  2 United States of America US          West Virginia Mineral 54057    39.42 -78.94   989 confirmed 2020-1~
-    ##  3 United States of America US          West Virginia Jackson 54035    38.84 -81.68   654 confirmed 2020-1~
-    ##  4 United States of America US          West Virginia Calhoun 54013    38.84 -81.12    56 confirmed 2020-1~
-    ##  5 United States of America US          West Virginia Marion  54049    39.51 -80.24   715 confirmed 2020-1~
-    ##  6 United States of America US          West Virginia Putnam  54079    38.51 -81.91  1645 confirmed 2020-1~
-    ##  7 United States of America US          West Virginia Ohio    54069    40.1  -80.62  1301 confirmed 2020-1~
-    ##  8 United States of America US          West Virginia Barbour 54001    39.13 -80      344 confirmed 2020-1~
-    ##  9 United States of America US          West Virginia Boone   54005    38.02 -81.7    581 confirmed 2020-1~
-    ## 10 United States of America US          West Virginia Wyoming 54109    37.61 -81.55   608 confirmed 2020-1~
-    ## # ... with 17,260 more rows
+    ## # A tibble: 17,325 x 10
+    ##    Country         CountryCode Province    City  CityCode Lat   Lon   Cases Status  Date       
+    ##    <chr>           <chr>       <chr>       <chr> <chr>    <chr> <chr> <int> <chr>   <chr>      
+    ##  1 United States ~ US          West Virgi~ Hanc~ 54029    40.52 -80.~   519 confir~ 2020-11-22~
+    ##  2 United States ~ US          West Virgi~ Mine~ 54057    39.42 -78.~   989 confir~ 2020-11-22~
+    ##  3 United States ~ US          West Virgi~ Jack~ 54035    38.84 -81.~   654 confir~ 2020-11-22~
+    ##  4 United States ~ US          West Virgi~ Calh~ 54013    38.84 -81.~    56 confir~ 2020-11-22~
+    ##  5 United States ~ US          West Virgi~ Mari~ 54049    39.51 -80.~   715 confir~ 2020-11-22~
+    ##  6 United States ~ US          West Virgi~ Putn~ 54079    38.51 -81.~  1645 confir~ 2020-11-22~
+    ##  7 United States ~ US          West Virgi~ Ohio  54069    40.1  -80.~  1301 confir~ 2020-11-22~
+    ##  8 United States ~ US          West Virgi~ Barb~ 54001    39.13 -80     344 confir~ 2020-11-22~
+    ##  9 United States ~ US          West Virgi~ Boone 54005    38.02 -81.7   581 confir~ 2020-11-22~
+    ## 10 United States ~ US          West Virgi~ Wyom~ 54109    37.61 -81.~   608 confir~ 2020-11-22~
+    ## # ... with 17,315 more rows
 
 ## `covid`
 
@@ -346,19 +336,20 @@ covid("Summary", "Country", continent = "Americas")
 ```
 
     ## # A tibble: 35 x 10
-    ##    Country         NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date      
-    ##    <chr>                  <int>          <int>     <int>       <int>        <int>          <int> <date>    
-    ##  1 Antigua and Ba~            0           3336         0          81            0              0 2021-10-03
-    ##  2 Argentina                886        5259352        14      115239            0              0 2021-10-03
-    ##  3 Bahamas                    0          21114         0         533            0              0 2021-10-03
-    ##  4 Barbados                 183           8792         1          79            0              0 2021-10-03
-    ##  5 Belize                     0          21003         0         418            0              0 2021-10-03
-    ##  6 Bolivia                    0         500823         0       18750            0              0 2021-10-03
-    ##  7 Brazil                 18578       21445651       506      597255            0              0 2021-10-03
-    ##  8 Canada                  4164        1337613        46       25242            0              0 2021-10-03
-    ##  9 Chile                    807        1655071         8       37476            0              0 2021-10-03
-    ## 10 Colombia                1867        4959144        37      126336            0              0 2021-10-03
-    ## # ... with 25 more rows, and 2 more variables: Continent <chr>, percentDeath <dbl>
+    ##    Country             NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered
+    ##    <chr>                      <int>          <int>     <int>       <int>        <int>          <int>
+    ##  1 Antigua and Barbuda            0           3403         0          84            0              0
+    ##  2 Argentina                      0        5259352         0      115239            0              0
+    ##  3 Bahamas                        0          21114         0         533            0              0
+    ##  4 Barbados                       0           8792         0          79            0              0
+    ##  5 Belize                         0          21003         0         418            0              0
+    ##  6 Bolivia                        0         500823         0       18750            0              0
+    ##  7 Brazil                     13466       21459117       468      597723            0              0
+    ##  8 Canada                      1728        1339341        22       25264            0              0
+    ##  9 Chile                        813        1655884         8       37484            0              0
+    ## 10 Colombia                    1497        4960641        36      126372            0              0
+    ## # ... with 25 more rows, and 3 more variables: Date <date>, Continent <chr>,
+    ## #   percentDeath <dbl>
 
 # Data Exporation
 
@@ -375,7 +366,7 @@ ggplot(data = regionData, aes(x = Continent, y = NewConfirmed)) +
   labs(title = "New Confirmed Cases by Continent")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 ``` r
 ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) + 
@@ -383,10 +374,11 @@ ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) +
   labs(title = "Total Confirmed Cases by Continent")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-28-2.png)<!-- -->
 
 Plot of the top 15 countires with the highest death percentage with
-confirmed cases above 100
+confirmed cases above 100. The bars have the total confirmed cases to
+give us an idea of what the percentage of deaths represents.
 
 ``` r
 check <- regionData %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDeath)) %>% slice(1:15)
@@ -394,7 +386,29 @@ check <- regionData %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDea
 ggplot(data = check, aes(x = Country, y = percentDeath)) + 
   geom_bar(stat = "identity", aes(fill = Continent)) +
   labs(title = "Top 15 Countries by Percentage of Deaths", y = "Percent of Deaths" ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = TotalConfirmed), size = 2.5, vjust = -0.2)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+
+We can see there’s a decent mix of continents that have the highest
+death percentages overall, but this may not be a good indicator of how
+they’re doing recently. As we can see with Yemen, they have a large
+percentage but they also have less than 10,000 confirmed cases. This may
+be a country with a small population so this is still significant, or
+they have done a good job of containing the virus and reducing spread.
+This could be something that can be analyze further if necessary.
+
+Next we’ll look at the new confirmed cases
+
+``` r
+country <- covid("summary", "country")
+```
+
+``` r
+ggplot(country, aes(x = NewConfirmed)) +
+  geom_histogram(binwidth = 500)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
