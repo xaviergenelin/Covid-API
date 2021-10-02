@@ -1,7 +1,7 @@
 Covid Vignette
 ================
 Xavier Genelin
-10/2/2021
+10/3/2021
 
 -   [Packages](#packages)
 -   [Functions](#functions)
@@ -323,7 +323,7 @@ print(covid("summary", "global"))
     ## # A tibble: 1 x 8
     ##   NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date       percentDeath
     ##          <int>          <int>     <int>       <int>        <int>          <int> <date>            <dbl>
-    ## 1       180646      234287358      3481     4794400            0              0 2021-10-03         2.05
+    ## 1       340712      234287358      5699     4794400            0              0 2021-10-04         2.05
 
 Make a scatter plot of values for the country summary with continents in
 different colors or totals in bars. Maybe both
@@ -347,13 +347,13 @@ par(mfrow = c(2,1))
 plot1
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
 
 ``` r
 plot2
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-42-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-54-2.png)<!-- -->
 
 Plot of the top 15 countries with the highest death percentage with
 confirmed cases above 100. The bars have the total confirmed cases to
@@ -369,7 +369,7 @@ ggplot(data = check, aes(x = Country, y = percentDeath)) +
   geom_text(aes(label = TotalConfirmed), size = 2.5, vjust = -0.2)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
 
 We can see there’s a decent mix of continents that have the highest
 death percentages overall, but this may not be a good indicator of how
@@ -403,4 +403,111 @@ ggplot(country, aes(x = NewConfirmed, y = NewDeaths)) +
   labs(title = "New Covid Cases vs New Covid Deaths", x = "New Cases", y = "New Deaths")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-45-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->
+
+There seems to be a lot of variation in deaths with high number of
+cases. We can also see that 3 of the top 4 death numbers are from the
+Americas, with the top one being a European country. We can use the same
+dataset to find out what those 4 countries are to do a further analysis.
+
+``` r
+country %>% arrange(desc(NewDeaths)) %>% slice(1:4)
+```
+
+    ## # A tibble: 4 x 11
+    ##   Country                  NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date       Continent percentDeath deathPercentGro~
+    ##   <chr>                           <int>          <int>     <int>       <int>        <int>          <int> <date>     <chr>            <dbl> <fct>           
+    ## 1 Russian Federation              24632        7449689       873      205297            0              0 2021-10-04 Europe            2.76 High            
+    ## 2 United States of America        39206       43657833       647      700932            0              0 2021-10-04 Americas          1.61 Medium          
+    ## 3 Mexico                           7369        3678980       614      278592            0              0 2021-10-04 Americas          7.57 Low             
+    ## 4 Brazil                          13466       21459117       468      597723            0              0 2021-10-04 Americas          2.79 High
+
+Now we’ll examine the Russian Federation, the United States, Mexico, and
+Brazil to see how they have been doing with confirmed cases and deaths
+since their first confirmed covid case. To get country level data, we
+can use the `dayone` option from the `covid` function. With the United
+States being as large as it is, we’d need to filter on one of the 50
+states and can’t get country level data. So we’ll look at just Russia,
+Brazil, and Mexico.
+
+``` r
+russia <- covid("dayone", "Russian Federation", "country")
+brazil <- covid("dayone", "Brazil", "country")
+mexico <- covid("dayone", "Mexico", "country")
+
+# combines the 3 datasets into one to put the next couple plots side by side
+boxes <- rbind(russia, brazil, mexico)
+
+ggplot(boxes, aes(x = Country, y = Confirmed)) +
+  geom_boxplot() +
+  labs(title = "Confirmed Cases by Country", y = "Confirmed Cases")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-59-1.png)<!-- -->
+
+``` r
+ggplot(boxes, aes(x = Country, y = Deaths)) +
+  geom_boxplot() +
+  labs(title = "Deaths by Country")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-60-1.png)<!-- -->
+
+So we can see that Brazil has had much higher confirmed numbers and also
+more deaths. Since this is a highly populated country, this would make
+sense. The interesting aspect of this is that Russia has more median
+number of confirmed cases compared to Mexico, but Mexico has a higher
+median of deaths than Russia.
+
+To dive in a little deeper with the United States we need to choose a
+state. I’ve been in Wisconsin during the whole pandemic, so I’m
+interested to see what our numbers look like. This will bring in data
+for each of the counties in Wisconsin as well, so we can choose to see
+it at either a state or county level.
+
+``` r
+wisco <- covid("dayone", "US", "id", status = "all", "wisconsin", "name")
+# fitler on trempealeau county
+tremp <- wisco %>% filter(City == "Trempealeau")
+
+# get state level data for confirmed, deaths, recovered
+wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
+```
+
+First we’ll examine this at a state level.
+
+``` r
+test <- gather(wisco, status, value, Confirmed, Deaths, Recovered)
+test
+```
+
+    ## # A tibble: 945 x 3
+    ##    Date       status     value
+    ##    <date>     <chr>      <int>
+    ##  1 2020-11-22 Confirmed 376238
+    ##  2 2020-11-23 Confirmed 379693
+    ##  3 2020-11-24 Confirmed 386441
+    ##  4 2020-11-25 Confirmed 392438
+    ##  5 2020-11-26 Confirmed 398104
+    ##  6 2020-11-27 Confirmed 399526
+    ##  7 2020-11-28 Confirmed 404999
+    ##  8 2020-11-29 Confirmed 409054
+    ##  9 2020-11-30 Confirmed 411730
+    ## 10 2020-12-01 Confirmed 416365
+    ## # ... with 935 more rows
+
+``` r
+ggplot(wisco, aes(x = Confirmed)) +
+  geom_histogram() +
+  labs(title = "Histogram of Confirmed Cases in Wisconsin")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-62-1.png)<!-- -->
+
+``` r
+ggplot(tremp, aes(x = Confirmed)) +
+  geom_histogram() +
+  labs(title = "Histogram of Confirmed Cases in Trempealeau County")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->

@@ -362,13 +362,23 @@ wisco <- covid("dayone", "US", "id", status = "all", "wisconsin", "name")
 # fitler on trempealeau county
 tremp <- wisco %>% filter(City == "Trempealeau")
 
-# get state level data for confirmed, deaths, and recovered
-wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered), Active = sum(Active))
+# get state level data for confirmed, deaths, recovered
+wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
 ```
 
 First we'll examine this at a state level.
 
 ```{r}
+test <- gather(wisco, status, value, Confirmed, Deaths, Recovered)
+test
+ggplot(wisco, aes(x = Confirmed)) +
+  geom_histogram() +
+  labs(title = "Histogram of Confirmed Cases in Wisconsin")
+```
 
+```{r}
+ggplot(tremp, aes(x = Confirmed)) +
+  geom_histogram() +
+  labs(title = "Histogram of Confirmed Cases in Trempealeau County")
 ```
 
