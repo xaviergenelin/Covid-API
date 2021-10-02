@@ -99,10 +99,12 @@ covidSummary <- function(type, continent = "all"){
     # This removes unnecessary columns and creates a new column that calculates the percentage 
     # of deaths by country and groups that percentage in 3 different levels
     output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", 
-                                "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% 
+                                "TotalDeaths", "NewRecovered", "TotalRecovered", 
+                                "Date", "Continent") %>% 
       mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date), 
              deathPercentGroup = ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 5, "High", 
-                                        ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 2.5, "Medium", "Low")))
+                                        ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 2.5, 
+                                               "Medium", "Low")))
     
     # Makes the groups into a factor
     output$deathPercentGroup <- as.factor(output$deathPercentGroup)
@@ -113,7 +115,8 @@ covidSummary <- function(type, continent = "all"){
         output <- output %>% filter(Continent == continent)
       
         if(nrow(output) == 0){
-          # If the user selects a continent that isn't in the data set, it provides a list to choose from
+          # If the user selects a continent that isn't in the data set
+          # This provides a list to choose from
           stop(paste("Please select one of the following continents: ", 
                      paste(sort(continents), collapse = ", "), sep = " "))
         }
@@ -265,8 +268,8 @@ dayOne <- function(country, IDType, status = "all", province = "all",
   # this will remove any unnecessary information from the output
   if(status == "all"){
     output <- output %>% select("Country", "Province", "City", "Confirmed", "Deaths", 
-                                "Recovered", "Active", "Date") %>% mutate(Date = as.Date(Date), 
-                                                                          deathPercentage = round(Deaths/Confirmed, 2))
+                                "Recovered", "Active", "Date") %>% 
+      mutate(Date = as.Date(Date), deathPercentage = round(Deaths/Confirmed, 2))
   } else {
     output <- output %>% select("Country", "Province", "City", "Cases", "Status", "Date") %>% 
       mutate(Date = as.Date(Date))
@@ -524,7 +527,8 @@ all started, China.
 ``` r
 china <- covid("dayone", "China", "country")
 
-china <- china %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
+china <- china %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), 
+                                                Recovered = sum(Recovered))
 
 results <- gather(china, status, value, Confirmed, Deaths, Recovered) %>% group_by(status) %>% 
   summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), 
