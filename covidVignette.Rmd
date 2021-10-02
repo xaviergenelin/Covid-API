@@ -269,20 +269,18 @@ covid <- function(func, ...){
 
 # Data Exporation
 
-The first thing we can look at is the global numbers of covid. This table will show the total numbers since the beginning while also having the new confirmed, deaths, and recovered by the most recent date. The percentDeath column was created to show the total death percentage for the globe. 
+The first thing we can look at is the global covid numbers. This table will show the total numbers since the beginning while also having the new confirmed, deaths, and recovered by the most recent date. The percentDeath column was created to show the total death percentage for the globe.
 
 ```{r}
 kable(covid("summary", "global"))
 ```
 
-Plot of the top 15 countries with the highest death percentage with confirmed cases above 100. The bars have the total confirmed cases to give us an idea of what the percentage of deaths represents.
+There are a lot of countries in the world, so it would be difficult to see any sort of detail if we were to show every one of the countries. So next we'll plot the top 15 countries with the highest death percentage with confirmed cases above 100. The bars have the number of total confirmed cases to give us an idea of what the percentage of deaths represents.
 
 ```{r}
 country <- covid("summary", "country")
 topCountry <- country %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDeath)) %>% slice(1:15)
-```
 
-```{r}
 ggplot(data = topCountry, aes(x = Country, y = percentDeath)) + 
   geom_bar(stat = "identity", aes(fill = Continent)) +
   labs(title = "Top 15 Countries by Percentage of Deaths", y = "Percent of Deaths" ) +
@@ -296,9 +294,7 @@ We can see there's a decent mix of continents that have the highest death percen
 table(country$Continent, country$deathPercentGroup)
 ```
 
-
-
-Next we'll look at a scatter plot of the new confirmed cases and the new confirmed deaths for each country. This will be the most recent day's data. 
+Oceania doesn't have any high percentage of deaths, which could be due to their stricter rules (like in Australia for example). A lot of countries for each continent are in the medium category, which is a total death percentage between 2.5$\%$ and 5$\%$. Africa has the highest number of high death percentages, which may be due to less accessible health services. Unfortunately, not a lot of countries have low death percentages and Europe doesn't have any. Next we'll look at a scatter plot of the new confirmed cases and the new confirmed deaths for each country. This will be the most recent day's data. 
 
 
 ```{r}
@@ -307,13 +303,13 @@ ggplot(country, aes(x = NewConfirmed, y = NewDeaths)) +
   labs(title = "New Covid Cases vs New Covid Deaths", x = "New Cases", y = "New Deaths")
 ```
 
-There seems to be a lot of variation in deaths with high number of cases. We can also see that 3 of the top 4 death numbers are from the Americas, with the top one being a European country. We can use the same dataset to find out what those 4 countries are to do a further analysis.
+There seems to be a lot of variation in deaths with high number of cases. We can also see that 3 of the top 4 death numbers are from the Americas, with the top one being a European country. We can use the same data set to find out what those 4 countries are to do a further analysis.
 
 ```{r}
-country %>% arrange(desc(NewDeaths)) %>% slice(1:4)
+kable(country %>% arrange(desc(NewDeaths)) %>% slice(1:4))
 ```
 
-Now we'll examine the Russian Federation, the United States, Mexico, and Brazil to see how they have been doing with confirmed cases and deaths since their first confirmed covid case. To get country level data, we can use the `dayone` option from the `covid` function. With the United States being as large as it is, we'd need to filter on one of the 50 states and can't get country level data. So we'll look at just Russia, Brazil, and Mexico. 
+Now we'll examine the Russian Federation, the United States, Mexico, and Brazil to see how they have been doing with confirmed cases and deaths since their first confirmed covid case. To get country level data, we can use the `dayone` option from the `covid` function. With the United States being as large as it is, we'd need to filter on one of the 50 states and can't get country level data quickly/easily. So we'll look at just Russia, Brazil, and Mexico. The boxes show the daily number of cases from each country's first confirmed case. 
 
 ```{r}
 russia <- covid("dayone", "Russian Federation", "country")
@@ -334,20 +330,20 @@ ggplot(boxes, aes(x = Country, y = Deaths)) +
   labs(title = "Deaths by Country")
 ```
 
-So we can see that Brazil has had much higher confirmed numbers and also more deaths. Since this is a highly populated country, this would make sense. The interesting aspect of this is that Russia has more median number of confirmed cases compared to Mexico, but Mexico has a higher median of deaths than Russia. 
+So we can see that Brazil has had much higher confirmed numbers and also more deaths compared to Brazil and Russia. Since this is a highly populated country, this would make sense. The interesting aspect of this is that Russia has higher number of confirmed cases compared to Mexico, but Mexico has a higher number of deaths than Russia. 
 
-To dive in a little deeper with the United States we need to choose a state. I've been in Wisconsin during the whole pandemic, so I'm interested to see what our numbers look like. This will bring in data for each of the counties in Wisconsin as well, so we can choose to see it at either a state or county level. 
+To dive in a little deeper with the United States we need to choose a state. I've been in Wisconsin during the whole pandemic, so I'm interested to see what our numbers look like. This will bring in data for each of the counties in Wisconsin as well, so we can choose to see it at either a state or county level. We'll look at this at a state level and Trempealeau county (this is my county).
 
 ```{r}
 wisco <- covid("dayone", "US", "id", status = "all", "wisconsin", "name")
-# fitler on trempealeau county
+# filter on trempealeau county
 tremp <- wisco %>% filter(City == "Trempealeau") %>% select(Confirmed, Deaths, Recovered, Date)
 
 # get state level data for confirmed, deaths, recovered
 wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
 ```
 
-First we'll examine this at a state level and then Trempealeau county in Wisconsin (this is my county).
+Both plots will be showing the distribution of the daily number of confirmed cases. 
 
 ```{r}
 ggplot(wisco, aes(x = Confirmed)) +
@@ -379,17 +375,13 @@ china <- covid("dayone", "China", "country")
 china <- china %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
 
 results <- gather(china, status, value, Confirmed, Deaths, Recovered) %>% group_by(status) %>% summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), avg = mean(value), q3 = quantile(value, 0.75), max = max(value))
-
+print(results)
 kable(results)
 ```
 
-Unlike when we examined the Wisconsin data set, the China data set does have recovered numbers. 
+Unlike when we examined the Wisconsin data set, the China data set does have recovered numbers. We can see there's a large jump from the minimum values to the first quantile, which makes sense because viruses become more contagious as they spread. 
 
 
 # Wrap Up
 
 This vignette is just a small part of what someone can do with the Covid API. There are other endpoints within the API that one can go to, and within each of the endpoints there are countless things someone can examine with this. This did some exploratory analysis into summary data and country, state, and county level data. 
-
-
-
-
