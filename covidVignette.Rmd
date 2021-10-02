@@ -272,39 +272,18 @@ covid <- function(func, ...){
 The first thing we can look at is the global numbers of covid. This table will show the total numbers since the beginning while also having the new confirmed, deaths, and recovered by the most recent date. The percentDeath column was created to show the total death percentage for the globe. 
 
 ```{r}
-print(covid("summary", "global"))
-```
-
-
-Make a scatter plot of values for the country summary with continents in different colors or totals in bars. Maybe both
-
-```{r}
-country <- covid("summary", "country")
-```
-
-
-```{r}
-plot1 <- ggplot(data = country, aes(x = Continent, y = NewConfirmed)) + 
-  geom_bar(stat = "identity") +
-  labs(title = "New Confirmed Cases by Continent")
-
-plot2 <- ggplot(data = country, aes(x = Continent, y = TotalConfirmed)) + 
-  geom_bar(stat = "identity") +
-  labs(title = "Total Confirmed Cases by Continent")
-```
-
-```{r}
-par(mfrow = c(2,1))
-plot1
-plot2
+kable(covid("summary", "global"))
 ```
 
 Plot of the top 15 countries with the highest death percentage with confirmed cases above 100. The bars have the total confirmed cases to give us an idea of what the percentage of deaths represents.
 
 ```{r}
-check <- country %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDeath)) %>% slice(1:15)
+country <- covid("summary", "country")
+topCountry <- country %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDeath)) %>% slice(1:15)
+```
 
-ggplot(data = check, aes(x = Country, y = percentDeath)) + 
+```{r}
+ggplot(data = topCountry, aes(x = Country, y = percentDeath)) + 
   geom_bar(stat = "identity", aes(fill = Continent)) +
   labs(title = "Top 15 Countries by Percentage of Deaths", y = "Percent of Deaths" ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
