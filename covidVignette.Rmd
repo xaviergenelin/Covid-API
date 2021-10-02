@@ -70,9 +70,12 @@ covidSummary <- function(type, continent = "all"){
     output$Continent[is.na(output$Continent)] <- "Europe"
     continents <- unique(output$Continent)
     
-    # This removes unnecessary columns and creates a new column that calculates the percentage of deaths by country
-    output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
+    # This removes unnecessary columns and creates a new column that calculates the percentage of deaths by country and groups that percentage in 3 different levels
+    output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date), deathPercentGroup = ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 5, "High", ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 2.5, "Medium", "Low")))
     
+    output$deathPercentGroup <- as.factor(output$deathPercentGroup)
+    
+    levels(output$deathPercentGroup) <- c("Low", "Medium", "High")
       if(continent != "all"){
         continent <- str_to_title(continent)
         output <- output %>% filter(Continent == continent)
@@ -205,7 +208,7 @@ dayOne <- function(country, IDType, status = "all", province = "all", provType, 
   # if there is a status that will change the data frame 
   # this will remove any unnecessary information from the output
   if(status == "all"){
-    output <- output %>% select("Country", "Province", "City", "Confirmed", "Deaths", "Recovered", "Active", "Date") %>% mutate(Date = as.Date(Date))
+    output <- output %>% select("Country", "Province", "City", "Confirmed", "Deaths", "Recovered", "Active", "Date") %>% mutate(Date = as.Date(Date), deathPercentage = round(Deaths/Confirmed, 2))
   } else {
     output <- output %>% select("Country", "Province", "City", "Cases", "Status", "Date") %>% mutate(Date = as.Date(Date))
   }
@@ -244,18 +247,6 @@ dayOne <- function(country, IDType, status = "all", province = "all", provType, 
 }
 ```
 
-
-Testing to see if this will work as an error for the total function
-
-It works for this one!!!!
-```{r}
-getAPI <- GET("https://api.covid19api.com/dayone/country/united-states/status/confirmed?province=wv")
-dat <- fromJSON(rawToChar(getAPI$content))
-test <- as_tibble(dat)
-test
-```
-
-
 ## `covid`
 
 Create one final function that uses the other functions above to collect whatever data is needed
@@ -274,36 +265,42 @@ covid <- function(func, ...){
 }
 ```
 
+# Data Exporation
+
+The first thing we can look at is the global numbers of covid. This table will show the total numbers since the beginning while also having the new confirmed, deaths, and recovered by the most recent date. The percentDeath column was created to show the total death percentage for the globe. 
+
 ```{r}
-covid("Summary", "Country", continent = "Americas")
+print(covid("summary", "global"))
 ```
 
-
-
-
-# Data Exporation
 
 Make a scatter plot of values for the country summary with continents in different colors or totals in bars. Maybe both
 
 ```{r}
-regionData <- covid("summary", "country")
+country <- covid("summary", "country")
 ```
 
 
 ```{r}
-ggplot(data = regionData, aes(x = Continent, y = NewConfirmed)) + 
+plot1 <- ggplot(data = country, aes(x = Continent, y = NewConfirmed)) + 
   geom_bar(stat = "identity") +
   labs(title = "New Confirmed Cases by Continent")
 
-ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) + 
+plot2 <- ggplot(data = country, aes(x = Continent, y = TotalConfirmed)) + 
   geom_bar(stat = "identity") +
   labs(title = "Total Confirmed Cases by Continent")
 ```
 
-Plot of the top 15 countires with the highest death percentage with confirmed cases above 100. The bars have the total confirmed cases to give us an idea of what the percentage of deaths represents.
+```{r}
+par(mfrow = c(2,1))
+plot1
+plot2
+```
+
+Plot of the top 15 countries with the highest death percentage with confirmed cases above 100. The bars have the total confirmed cases to give us an idea of what the percentage of deaths represents.
 
 ```{r}
-check <- regionData %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDeath)) %>% slice(1:15)
+check <- country %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDeath)) %>% slice(1:15)
 
 ggplot(data = check, aes(x = Country, y = percentDeath)) + 
   geom_bar(stat = "identity", aes(fill = Continent)) +
@@ -312,18 +309,21 @@ ggplot(data = check, aes(x = Country, y = percentDeath)) +
   geom_text(aes(label = TotalConfirmed), size = 2.5, vjust = -0.2)
 ```
 
-We can see there's a decent mix of continents that have the highest death percentages overall, but this may not be a good indicator of how they're doing recently. As we can see with Yemen, they have a large percentage but they also have less than 10,000 confirmed cases. This may be a country with a small population so this is still significant, or they have done a good job of containing the virus and reducing spread. This could be something that can be analyze further if necessary.
-
-Next we'll look at the new confirmed cases 
-
+We can see there's a decent mix of continents that have the highest death percentages overall, but this may not be a good indicator of how they're doing recently. As we can see with Yemen, they have a large percentage but they also have less than 10,000 confirmed cases. This may be a country with a small population so this is still significant, or they have done a good job of containing the virus and reducing spread. This could be something that can be analyze further if necessary. The top percentages look to be a little under 5$\%$, so we check how each continent compares to one another based on the different categories. 
 
 ```{r}
-country <- covid("summary", "country")
+table(country$Continent, country$deathPercentGroup)
 ```
 
+
+
+Next we'll look at a scatter plot of the new confirmed cases and the new confirmed deaths for each country. This will be the most recent day's data. 
+
+
 ```{r}
-ggplot(country, aes(x = NewConfirmed)) +
-  geom_histogram(binwidth = 500)
+ggplot(country, aes(x = NewConfirmed, y = NewDeaths)) +
+  geom_point(aes(color = Continent)) + 
+  labs(title = "New Covid Cases vs New Covid Deaths", x = "New Cases", y = "New Deaths")
 ```
 
 
