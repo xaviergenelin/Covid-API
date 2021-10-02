@@ -1,7 +1,7 @@
 Covid Vignette
 ================
 Xavier Genelin
-10/3/2021
+10/4/2021
 
 -   [Packages](#packages)
 -   [Functions](#functions)
@@ -79,13 +79,15 @@ covidSummary <- function(type, continent = "all"){
     output <- as_tibble(dat$Global)
     
     # Creates a new variable that calculates the percentage of deaths globally
-    output <- output %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
+    output <- output %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), 
+                                Date = as.Date(Date))
     
   } else if(type == "country"){
     output <- as_tibble(dat$Countries)
     
-    output <- output %>% select("Country", "CountryCode", "Slug", "NewConfirmed", 
-                                "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date")
+    output <- output %>% select("Country", "CountryCode", "Slug", "NewConfirmed", "TotalConfirmed", 
+                                "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date")
+    
     # Adds the continent to the dataset based on the country name
     output$Continent <- countrycode(output$Country, origin = "country.name", destination = "continent")
     # The Republic of Kosovo is not in the dataset. After looking it up this is in Europe
@@ -94,8 +96,13 @@ covidSummary <- function(type, continent = "all"){
     # Get a list of continents to display to the user if the result doesn't return any data
     continents <- unique(output$Continent)
     
-    # This removes unnecessary columns and creates a new column that calculates the percentage of deaths by country and groups that percentage in 3 different levels
-    output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date), deathPercentGroup = ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 5, "High", ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 2.5, "Medium", "Low")))
+    # This removes unnecessary columns and creates a new column that calculates the percentage 
+    # of deaths by country and groups that percentage in 3 different levels
+    output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", 
+                                "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% 
+      mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date), 
+             deathPercentGroup = ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 5, "High", 
+                                        ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 2.5, "Medium", "Low")))
     
     # Makes the groups into a factor
     output$deathPercentGroup <- as.factor(output$deathPercentGroup)
@@ -107,7 +114,8 @@ covidSummary <- function(type, continent = "all"){
       
         if(nrow(output) == 0){
           # If the user selects a continent that isn't in the data set, it provides a list to choose from
-          stop(paste("Please select one of the following continents: ", paste(sort(continents), collapse = ", "), sep = " "))
+          stop(paste("Please select one of the following continents: ", 
+                     paste(sort(continents), collapse = ", "), sep = " "))
         }
       }
   }
@@ -212,8 +220,10 @@ that will need to be fitlered after getting the data They also need to
 have a status of confirmed, deaths, or recovered
 
 ``` r
-dayOne <- function(country, IDType, status = "all", province = "all", provType, city = "all", fromDate = "", toDate = ""){
-  # This checks to see if there will be an error with the status later on before manipulating the dataset at all
+dayOne <- function(country, IDType, status = "all", province = "all", 
+                   provType, city = "all", fromDate = "", toDate = ""){
+  # This checks to see if there will be an error with the status
+  # Prevents an error later on before manipulating the data set at all
   status <- tolower(status)
   if(!(status %in% c("all", "confirmed", "deaths", "recovered"))){
     stop("Status has to be one of the following: all, confirmed, deaths, recovered")
@@ -225,12 +235,14 @@ dayOne <- function(country, IDType, status = "all", province = "all", provType, 
   # This gets the main part of the url for the country the user wants to see data for
   url <- paste0(main, country)
   
-  # This first checks to see if the user wants to see a specific type of status and put that into the url
+  # This first checks to see if the user wants to see 
+  # a specific type of status and put that into the url
   if(status != "all"){
     url <- paste0(url, "/status/", status)
   } # if they leave the status as all, they can specify the province, city, or date range
   
-  # This will return country level data if possible, might return the provinces and cities depending on the country 
+  # This will return country level data if possible 
+  # Might need to return the provinces and cities depending on the country 
   if(province == "all"){
     getAPI <- GET(url)
     dat <- fromJSON(rawToChar(getAPI$content))
@@ -252,9 +264,12 @@ dayOne <- function(country, IDType, status = "all", province = "all", provType, 
   # if there is a status that will change the data frame 
   # this will remove any unnecessary information from the output
   if(status == "all"){
-    output <- output %>% select("Country", "Province", "City", "Confirmed", "Deaths", "Recovered", "Active", "Date") %>% mutate(Date = as.Date(Date), deathPercentage = round(Deaths/Confirmed, 2))
+    output <- output %>% select("Country", "Province", "City", "Confirmed", "Deaths", 
+                                "Recovered", "Active", "Date") %>% mutate(Date = as.Date(Date), 
+                                                                          deathPercentage = round(Deaths/Confirmed, 2))
   } else {
-    output <- output %>% select("Country", "Province", "City", "Cases", "Status", "Date") %>% mutate(Date = as.Date(Date))
+    output <- output %>% select("Country", "Province", "City", "Cases", "Status", "Date") %>% 
+      mutate(Date = as.Date(Date))
   }
   
   if(city != "all"){
@@ -263,7 +278,8 @@ dayOne <- function(country, IDType, status = "all", province = "all", provType, 
     output <- output %>% filter(City == city)
     # If the city isn't in the data set, the above code will return a data frame with 0 rows
     if(nrow(output) == 0){
-      stop(paste("ERROR: Please select one of these cities for the selected province: ", paste(cities, collapse = ", "), sep = " "))
+      stop(paste("ERROR: Please select one of these cities for the selected province: ", 
+                 paste(cities, collapse = ", "), sep = " "))
     }
   }
   
@@ -325,7 +341,7 @@ kable(covid("summary", "global"))
 
 | NewConfirmed | TotalConfirmed | NewDeaths | TotalDeaths | NewRecovered | TotalRecovered | Date       | percentDeath |
 |-------------:|---------------:|----------:|------------:|-------------:|---------------:|:-----------|-------------:|
-|       319238 |      234425950 |      5378 |     4796297 |            0 |              0 | 2021-10-04 |         2.05 |
+|       149291 |      234582768 |      1961 |     4798370 |            0 |              0 | 2021-10-04 |         2.05 |
 
 There are a lot of countries in the world, so it would be difficult to
 see any sort of detail if we were to show every one of the countries. So
@@ -399,10 +415,10 @@ kable(country %>% arrange(desc(NewDeaths)) %>% slice(1:4))
 
 | Country                  | NewConfirmed | TotalConfirmed | NewDeaths | TotalDeaths | NewRecovered | TotalRecovered | Date       | Continent | percentDeath | deathPercentGroup |
 |:-------------------------|-------------:|---------------:|----------:|------------:|-------------:|---------------:|:-----------|:----------|-------------:|:------------------|
-| Russian Federation       |        24632 |        7449689 |       873 |      205297 |            0 |              0 | 2021-10-04 | Europe    |         2.76 | High              |
-| United States of America |        39206 |       43657833 |       647 |      700932 |            0 |              0 | 2021-10-04 | Americas  |         1.61 | Medium            |
-| Mexico                   |         7369 |        3678980 |       614 |      278592 |            0 |              0 | 2021-10-04 | Americas  |         7.57 | Low               |
-| Brazil                   |        13466 |       21459117 |       468 |      597723 |            0 |              0 | 2021-10-04 | Americas  |         2.79 | High              |
+| Russian Federation       |        25161 |        7474850 |       882 |      206179 |            0 |              0 | 2021-10-04 | Europe    |         2.76 | High              |
+| United States of America |        25215 |       43683048 |       237 |      701169 |            0 |              0 | 2021-10-04 | Americas  |         1.61 | Medium            |
+| Brazil                   |         9004 |       21468121 |       225 |      597948 |            0 |              0 | 2021-10-04 | Americas  |         2.79 | High              |
+| India                    |        20799 |       33834702 |       180 |      448997 |            0 |              0 | 2021-10-04 | Asia      |         1.33 | Medium            |
 
 Now we’ll examine the Russian Federation, the United States, Mexico, and
 Brazil to see how they have been doing with confirmed cases and deaths
@@ -455,7 +471,8 @@ wisco <- covid("dayone", "US", "id", status = "all", "wisconsin", "name")
 tremp <- wisco %>% filter(City == "Trempealeau") %>% select(Confirmed, Deaths, Recovered, Date)
 
 # get state level data for confirmed, deaths, recovered
-wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
+wisco <- wisco %>% group_by(Date) %>% 
+  summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
 ```
 
 Both plots will be showing the distribution of the daily number of
@@ -485,16 +502,18 @@ and also unfortunately die. We can look at Wisconsin
 ``` r
 badgers <- gather(wisco, status, value, Confirmed, Deaths, Recovered)
 
-output <- badgers %>% group_by(status) %>% summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), avg = mean(value), q3 = quantile(value, 0.75), max = max(value))
+output <- badgers %>% group_by(status) %>% summarize(min = min(value), q1 = quantile(value, 0.25), 
+                                                     med = median(value), avg = mean(value), 
+                                                     q3 = quantile(value, 0.75), max = max(value))
 
 kable(output)
 ```
 
-| status    |    min |       q1 |    med |        avg |     q3 |    max |
-|:----------|-------:|---------:|-------:|-----------:|-------:|-------:|
-| Confirmed | 376238 | 601823.5 | 658696 | 636114.679 | 679715 | 814187 |
-| Deaths    |   3150 |   6638.5 |   7534 |   7161.229 |   8197 |   8901 |
-| Recovered |      0 |      0.0 |      0 |      0.000 |      0 |      0 |
+| status    |    min |        q1 |    med |        avg |        q3 |    max |
+|:----------|-------:|----------:|-------:|-----------:|----------:|-------:|
+| Confirmed | 376238 | 602039.75 | 659148 | 636678.199 | 679826.00 | 814187 |
+| Deaths    |   3150 |   6650.75 |   7538 |   7166.734 |   8200.75 |   8901 |
+| Recovered |      0 |      0.00 |      0 |      0.000 |      0.00 |      0 |
 
 It’s interesting to see that the recovered numbers are all 0 for the
 state level. This could be something specific with the API or something
@@ -507,26 +526,18 @@ china <- covid("dayone", "China", "country")
 
 china <- china %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
 
-results <- gather(china, status, value, Confirmed, Deaths, Recovered) %>% group_by(status) %>% summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), avg = mean(value), q3 = quantile(value, 0.75), max = max(value))
-print(results)
-```
+results <- gather(china, status, value, Confirmed, Deaths, Recovered) %>% group_by(status) %>% 
+  summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), 
+            avg = mean(value), q3 = quantile(value, 0.75), max = max(value))
 
-    ## # A tibble: 3 x 7
-    ##   status      min     q1    med    avg      q3    max
-    ##   <chr>     <int>  <dbl>  <dbl>  <dbl>   <dbl>  <int>
-    ## 1 Confirmed   548 84694  92537  91595. 102500. 108528
-    ## 2 Deaths       17  4641.  4742   4429.   4845.   4849
-    ## 3 Recovered     0 78394. 85410. 74105.  95726.  99228
-
-``` r
 kable(results)
 ```
 
-| status    | min |       q1 |     med |       avg |        q3 |    max |
-|:----------|----:|---------:|--------:|----------:|----------:|-------:|
-| Confirmed | 548 | 84694.00 | 92537.0 | 91594.852 | 102499.75 | 108528 |
-| Deaths    |  17 |  4640.75 |  4742.0 |  4429.039 |   4845.25 |   4849 |
-| Recovered |   0 | 78394.25 | 85410.5 | 74104.931 |  95726.50 |  99228 |
+| status    | min |    q1 |   med |       avg |     q3 |    max |
+|:----------|----:|------:|------:|----------:|-------:|-------:|
+| Confirmed | 548 | 84701 | 92586 | 91622.163 | 102517 | 108555 |
+| Deaths    |  17 |  4641 |  4742 |  4429.715 |   4846 |   4849 |
+| Recovered |   0 | 78374 | 85398 | 73985.599 |  95718 |  99228 |
 
 Unlike when we examined the Wisconsin data set, the China data set does
 have recovered numbers. We can see there’s a large jump from the minimum
