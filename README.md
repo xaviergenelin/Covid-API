@@ -66,7 +66,6 @@ calculates the total percent that have died from covid.
 
 ``` r
 # The user can either choose a global summary or country
-
 covidSummary <- function(type, continent = "all"){
   ### you can either select global or country to see the global summary or 
   # the summary by country
@@ -76,7 +75,6 @@ covidSummary <- function(type, continent = "all"){
   # This lets the user type in capital letters for the type and continent without erroring it out
   type <- tolower(type)
 
-  
   if(type == "global"){
     output <- as_tibble(dat$Global)
     
@@ -88,17 +86,20 @@ covidSummary <- function(type, continent = "all"){
     
     output <- output %>% select("Country", "CountryCode", "Slug", "NewConfirmed", 
                                 "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date")
-    
+    # Adds the continent to the dataset based on the country name
     output$Continent <- countrycode(output$Country, origin = "country.name", destination = "continent")
-    
+    # The Republic of Kosovo is not in the dataset. After looking it up this is in Europe
     output$Continent[is.na(output$Continent)] <- "Europe"
+    
+    # Get a list of continents to display to the user if the result doesn't return any data
     continents <- unique(output$Continent)
     
     # This removes unnecessary columns and creates a new column that calculates the percentage of deaths by country and groups that percentage in 3 different levels
     output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date), deathPercentGroup = ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 5, "High", ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 2.5, "Medium", "Low")))
     
+    # Makes the groups into a factor
     output$deathPercentGroup <- as.factor(output$deathPercentGroup)
-    
+    # Set the levels of the factor 
     levels(output$deathPercentGroup) <- c("Low", "Medium", "High")
       if(continent != "all"){
         continent <- str_to_title(continent)
@@ -110,9 +111,6 @@ covidSummary <- function(type, continent = "all"){
         }
       }
   }
-  
-
-
   return(output)
 }
 ```
@@ -149,7 +147,7 @@ getCountry <- function(country, IDType){
   } else {
     stop("ERROR: Invalid IDType. Should be country, id, or slug")
   }
-  
+  # If the user enters a country that returns nothing, stop the function
   if(nrow(output) == 0){
     stop("ERROR: Country not found. Check spelling, possible capitalization, or IDType")
   }
@@ -171,7 +169,7 @@ they need to filter down the United States data. There may be a similar
 issue with provinces in other countries, but there doesn’t seem to be
 anything in R to account for that at this time. This function defaults
 to the state name and has a built in error message if the user doesn’t
-spell the state corecctly or uses the right abbrevation.
+spell the state correctly or uses the right abbreviation.
 
 ``` r
 getState <- function(state, type = "name"){
@@ -191,6 +189,7 @@ getState <- function(state, type = "name"){
     output <- states %>% filter(abbreviation == state) %>% select(abbreviation)
   }
   
+  # checks to make sure the user inputs something that will return a state abbreviation
   if(nrow(output) == 0){
     stop("EROR: Make sure the state name is spelled correctly or the proper abbrevation")
   }
@@ -231,7 +230,7 @@ dayOne <- function(country, IDType, status = "all", province = "all", provType, 
     url <- paste0(url, "/status/", status)
   } # if they leave the status as all, they can specify the province, city, or date range
   
-  # This will return country level data if possible, might return a 
+  # This will return country level data if possible, might return the provinces and cities depending on the country 
   if(province == "all"){
     getAPI <- GET(url)
     dat <- fromJSON(rawToChar(getAPI$content))
@@ -245,6 +244,7 @@ dayOne <- function(country, IDType, status = "all", province = "all", provType, 
     output <- as_tibble(dat)
   }
   
+  # This is a message that gets outputted by the API if the data is too large
   if(output == "for performance reasons, please specify a province"){
     stop("Please specify a province for this country")
   }
@@ -313,9 +313,9 @@ covid <- function(func, ...){
 
 # Data Exporation
 
-The first thing we can look at is the global numbers of covid. This
-table will show the total numbers since the beginning while also having
-the new confirmed, deaths, and recovered by the most recent date. The
+The first thing we can look at is the global covid numbers. This table
+will show the total numbers since the beginning while also having the
+new confirmed, deaths, and recovered by the most recent date. The
 percentDeath column was created to show the total death percentage for
 the globe.
 
@@ -327,16 +327,17 @@ kable(covid("summary", "global"))
 |-------------:|---------------:|----------:|------------:|-------------:|---------------:|:-----------|-------------:|
 |       319238 |      234425950 |      5378 |     4796297 |            0 |              0 | 2021-10-04 |         2.05 |
 
-Plot of the top 15 countries with the highest death percentage with
-confirmed cases above 100. The bars have the total confirmed cases to
-give us an idea of what the percentage of deaths represents.
+There are a lot of countries in the world, so it would be difficult to
+see any sort of detail if we were to show every one of the countries. So
+next we’ll plot the top 15 countries with the highest death percentage
+with confirmed cases above 100. The bars have the number of total
+confirmed cases to give us an idea of what the percentage of deaths
+represents.
 
 ``` r
 country <- covid("summary", "country")
 topCountry <- country %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDeath)) %>% slice(1:15)
-```
 
-``` r
 ggplot(data = topCountry, aes(x = Country, y = percentDeath)) + 
   geom_bar(stat = "identity", aes(fill = Continent)) +
   labs(title = "Top 15 Countries by Percentage of Deaths", y = "Percent of Deaths" ) +
@@ -344,7 +345,7 @@ ggplot(data = topCountry, aes(x = Country, y = percentDeath)) +
   geom_text(aes(label = TotalConfirmed), size = 2.5, vjust = -0.2)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 We can see there’s a decent mix of continents that have the highest
 death percentages overall, but this may not be a good indicator of how
@@ -368,9 +369,15 @@ table(country$Continent, country$deathPercentGroup)
     ##   Europe     0     36    9
     ##   Oceania    1     10    0
 
-Next we’ll look at a scatter plot of the new confirmed cases and the new
-confirmed deaths for each country. This will be the most recent day’s
-data.
+Oceania doesn’t have any high percentage of deaths, which could be due
+to their stricter rules (like in Australia for example). A lot of
+countries for each continent are in the medium category, which is a
+total death percentage between 2.5% and 5%. Africa has the highest
+number of high death percentages, which may be due to less accessible
+health services. Unfortunately, not a lot of countries have low death
+percentages and Europe doesn’t have any. Next we’ll look at a scatter
+plot of the new confirmed cases and the new confirmed deaths for each
+country. This will be the most recent day’s data.
 
 ``` r
 ggplot(country, aes(x = NewConfirmed, y = NewDeaths)) +
@@ -378,32 +385,33 @@ ggplot(country, aes(x = NewConfirmed, y = NewDeaths)) +
   labs(title = "New Covid Cases vs New Covid Deaths", x = "New Cases", y = "New Deaths")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 There seems to be a lot of variation in deaths with high number of
 cases. We can also see that 3 of the top 4 death numbers are from the
 Americas, with the top one being a European country. We can use the same
-dataset to find out what those 4 countries are to do a further analysis.
+data set to find out what those 4 countries are to do a further
+analysis.
 
 ``` r
-country %>% arrange(desc(NewDeaths)) %>% slice(1:4)
+kable(country %>% arrange(desc(NewDeaths)) %>% slice(1:4))
 ```
 
-    ## # A tibble: 4 x 11
-    ##   Country                  NewConfirmed TotalConfirmed NewDeaths TotalDeaths NewRecovered TotalRecovered Date       Continent percentDeath deathPercentGro~
-    ##   <chr>                           <int>          <int>     <int>       <int>        <int>          <int> <date>     <chr>            <dbl> <fct>           
-    ## 1 Russian Federation              24632        7449689       873      205297            0              0 2021-10-04 Europe            2.76 High            
-    ## 2 United States of America        39206       43657833       647      700932            0              0 2021-10-04 Americas          1.61 Medium          
-    ## 3 Mexico                           7369        3678980       614      278592            0              0 2021-10-04 Americas          7.57 Low             
-    ## 4 Brazil                          13466       21459117       468      597723            0              0 2021-10-04 Americas          2.79 High
+| Country                  | NewConfirmed | TotalConfirmed | NewDeaths | TotalDeaths | NewRecovered | TotalRecovered | Date       | Continent | percentDeath | deathPercentGroup |
+|:-------------------------|-------------:|---------------:|----------:|------------:|-------------:|---------------:|:-----------|:----------|-------------:|:------------------|
+| Russian Federation       |        24632 |        7449689 |       873 |      205297 |            0 |              0 | 2021-10-04 | Europe    |         2.76 | High              |
+| United States of America |        39206 |       43657833 |       647 |      700932 |            0 |              0 | 2021-10-04 | Americas  |         1.61 | Medium            |
+| Mexico                   |         7369 |        3678980 |       614 |      278592 |            0 |              0 | 2021-10-04 | Americas  |         7.57 | Low               |
+| Brazil                   |        13466 |       21459117 |       468 |      597723 |            0 |              0 | 2021-10-04 | Americas  |         2.79 | High              |
 
 Now we’ll examine the Russian Federation, the United States, Mexico, and
 Brazil to see how they have been doing with confirmed cases and deaths
 since their first confirmed covid case. To get country level data, we
 can use the `dayone` option from the `covid` function. With the United
 States being as large as it is, we’d need to filter on one of the 50
-states and can’t get country level data. So we’ll look at just Russia,
-Brazil, and Mexico.
+states and can’t get country level data quickly/easily. So we’ll look at
+just Russia, Brazil, and Mexico. The boxes show the daily number of
+cases from each country’s first confirmed case.
 
 ``` r
 russia <- covid("dayone", "Russian Federation", "country")
@@ -418,7 +426,7 @@ ggplot(boxes, aes(x = Country, y = Confirmed)) +
   labs(title = "Confirmed Cases by Country", y = "Confirmed Cases")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ``` r
 ggplot(boxes, aes(x = Country, y = Deaths)) +
@@ -426,31 +434,32 @@ ggplot(boxes, aes(x = Country, y = Deaths)) +
   labs(title = "Deaths by Country")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 So we can see that Brazil has had much higher confirmed numbers and also
-more deaths. Since this is a highly populated country, this would make
-sense. The interesting aspect of this is that Russia has more median
-number of confirmed cases compared to Mexico, but Mexico has a higher
-median of deaths than Russia.
+more deaths compared to Brazil and Russia. Since this is a highly
+populated country, this would make sense. The interesting aspect of this
+is that Russia has higher number of confirmed cases compared to Mexico,
+but Mexico has a higher number of deaths than Russia.
 
 To dive in a little deeper with the United States we need to choose a
 state. I’ve been in Wisconsin during the whole pandemic, so I’m
 interested to see what our numbers look like. This will bring in data
 for each of the counties in Wisconsin as well, so we can choose to see
-it at either a state or county level.
+it at either a state or county level. We’ll look at this at a state
+level and Trempealeau county (this is my county).
 
 ``` r
 wisco <- covid("dayone", "US", "id", status = "all", "wisconsin", "name")
-# fitler on trempealeau county
+# filter on trempealeau county
 tremp <- wisco %>% filter(City == "Trempealeau") %>% select(Confirmed, Deaths, Recovered, Date)
 
 # get state level data for confirmed, deaths, recovered
 wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
 ```
 
-First we’ll examine this at a state level and then Trempealeau county in
-Wisconsin (this is my county).
+Both plots will be showing the distribution of the daily number of
+confirmed cases.
 
 ``` r
 ggplot(wisco, aes(x = Confirmed)) +
@@ -458,7 +467,7 @@ ggplot(wisco, aes(x = Confirmed)) +
   labs(title = "Histogram of Confirmed Cases in Wisconsin")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ``` r
 ggplot(tremp, aes(x = Confirmed)) +
@@ -466,7 +475,7 @@ ggplot(tremp, aes(x = Confirmed)) +
   labs(title = "Histogram of Confirmed Cases in Trempealeau County")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 Both of these look to be distributed similarly, although on different
 scales due to the difference in populations. The cases aren’t the entire
@@ -499,7 +508,17 @@ china <- covid("dayone", "China", "country")
 china <- china %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
 
 results <- gather(china, status, value, Confirmed, Deaths, Recovered) %>% group_by(status) %>% summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), avg = mean(value), q3 = quantile(value, 0.75), max = max(value))
+print(results)
+```
 
+    ## # A tibble: 3 x 7
+    ##   status      min     q1    med    avg      q3    max
+    ##   <chr>     <int>  <dbl>  <dbl>  <dbl>   <dbl>  <int>
+    ## 1 Confirmed   548 84694  92537  91595. 102500. 108528
+    ## 2 Deaths       17  4641.  4742   4429.   4845.   4849
+    ## 3 Recovered     0 78394. 85410. 74105.  95726.  99228
+
+``` r
 kable(results)
 ```
 
@@ -510,7 +529,9 @@ kable(results)
 | Recovered |   0 | 78394.25 | 85410.5 | 74104.931 |  95726.50 |  99228 |
 
 Unlike when we examined the Wisconsin data set, the China data set does
-have recovered numbers.
+have recovered numbers. We can see there’s a large jump from the minimum
+values to the first quantile, which makes sense because viruses become
+more contagious as they spread.
 
 # Wrap Up
 

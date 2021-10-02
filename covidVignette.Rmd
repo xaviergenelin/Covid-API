@@ -44,7 +44,6 @@ This first function gets access to the covid summary data and allows the user to
 
 ```{r}
 # The user can either choose a global summary or country
-
 covidSummary <- function(type, continent = "all"){
   ### you can either select global or country to see the global summary or 
   # the summary by country
@@ -54,7 +53,6 @@ covidSummary <- function(type, continent = "all"){
   # This lets the user type in capital letters for the type and continent without erroring it out
   type <- tolower(type)
 
-  
   if(type == "global"){
     output <- as_tibble(dat$Global)
     
@@ -66,17 +64,20 @@ covidSummary <- function(type, continent = "all"){
     
     output <- output %>% select("Country", "CountryCode", "Slug", "NewConfirmed", 
                                 "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date")
-    
+    # Adds the continent to the dataset based on the country name
     output$Continent <- countrycode(output$Country, origin = "country.name", destination = "continent")
-    
+    # The Republic of Kosovo is not in the dataset. After looking it up this is in Europe
     output$Continent[is.na(output$Continent)] <- "Europe"
+    
+    # Get a list of continents to display to the user if the result doesn't return any data
     continents <- unique(output$Continent)
     
     # This removes unnecessary columns and creates a new column that calculates the percentage of deaths by country and groups that percentage in 3 different levels
     output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date), deathPercentGroup = ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 5, "High", ifelse(round(TotalDeaths / TotalConfirmed * 100, 2) >= 2.5, "Medium", "Low")))
     
+    # Makes the groups into a factor
     output$deathPercentGroup <- as.factor(output$deathPercentGroup)
-    
+    # Set the levels of the factor 
     levels(output$deathPercentGroup) <- c("Low", "Medium", "High")
       if(continent != "all"){
         continent <- str_to_title(continent)
@@ -88,9 +89,6 @@ covidSummary <- function(type, continent = "all"){
         }
       }
   }
-  
-
-
   return(output)
 }
 ```
@@ -121,7 +119,7 @@ getCountry <- function(country, IDType){
   } else {
     stop("ERROR: Invalid IDType. Should be country, id, or slug")
   }
-  
+  # If the user enters a country that returns nothing, stop the function
   if(nrow(output) == 0){
     stop("ERROR: Country not found. Check spelling, possible capitalization, or IDType")
   }
@@ -132,7 +130,7 @@ getCountry <- function(country, IDType){
 
 ## `getState`
 
-This acts in a similar way to the `getCountry` function. Some of the APIs require us to filter down either by time or province after selecting the province. So if we wanted data on the United States, we may need to filter by one of those two things. If we wanted to see Wisconsin's data, that is easy to put into the url and get the data. But for states like West Virginia where there are more than one word in the state's name, this has to be the two letter abbreviation of the state. This function will let the user choose either option for the state if they need to filter down the United States data. There may be a similar issue with provinces in other countries, but there doesn't seem to be anything in R to account for that at this time. This function defaults to the state name and has a built in error message if the user doesn't spell the state corecctly or uses the right abbrevation.
+This acts in a similar way to the `getCountry` function. Some of the APIs require us to filter down either by time or province after selecting the province. So if we wanted data on the United States, we may need to filter by one of those two things. If we wanted to see Wisconsin's data, that is easy to put into the url and get the data. But for states like West Virginia where there are more than one word in the state's name, this has to be the two letter abbreviation of the state. This function will let the user choose either option for the state if they need to filter down the United States data. There may be a similar issue with provinces in other countries, but there doesn't seem to be anything in R to account for that at this time. This function defaults to the state name and has a built in error message if the user doesn't spell the state correctly or uses the right abbreviation.
 
 ```{r}
 getState <- function(state, type = "name"){
@@ -152,6 +150,7 @@ getState <- function(state, type = "name"){
     output <- states %>% filter(abbreviation == state) %>% select(abbreviation)
   }
   
+  # checks to make sure the user inputs something that will return a state abbreviation
   if(nrow(output) == 0){
     stop("EROR: Make sure the state name is spelled correctly or the proper abbrevation")
   }
@@ -189,7 +188,7 @@ dayOne <- function(country, IDType, status = "all", province = "all", provType, 
     url <- paste0(url, "/status/", status)
   } # if they leave the status as all, they can specify the province, city, or date range
   
-  # This will return country level data if possible, might return a 
+  # This will return country level data if possible, might return the provinces and cities depending on the country 
   if(province == "all"){
     getAPI <- GET(url)
     dat <- fromJSON(rawToChar(getAPI$content))
@@ -203,6 +202,7 @@ dayOne <- function(country, IDType, status = "all", province = "all", provType, 
     output <- as_tibble(dat)
   }
   
+  # This is a message that gets outputted by the API if the data is too large
   if(output == "for performance reasons, please specify a province"){
     stop("Please specify a province for this country")
   }
@@ -380,7 +380,6 @@ kable(results)
 ```
 
 Unlike when we examined the Wisconsin data set, the China data set does have recovered numbers. We can see there's a large jump from the minimum values to the first quantile, which makes sense because viruses become more contagious as they spread. 
-
 
 # Wrap Up
 
