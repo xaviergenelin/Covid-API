@@ -1,7 +1,7 @@
 ---
 title: "Covid Vignette"
 author: "Xavier Genelin"
-date: "10/2/2021"
+date: "10/3/2021"
 output: 
   github_document:
     toc: True
@@ -326,4 +326,49 @@ ggplot(country, aes(x = NewConfirmed, y = NewDeaths)) +
   labs(title = "New Covid Cases vs New Covid Deaths", x = "New Cases", y = "New Deaths")
 ```
 
+There seems to be a lot of variation in deaths with high number of cases. We can also see that 3 of the top 4 death numbers are from the Americas, with the top one being a European country. We can use the same dataset to find out what those 4 countries are to do a further analysis.
+
+```{r}
+country %>% arrange(desc(NewDeaths)) %>% slice(1:4)
+```
+
+Now we'll examine the Russian Federation, the United States, Mexico, and Brazil to see how they have been doing with confirmed cases and deaths since their first confirmed covid case. To get country level data, we can use the `dayone` option from the `covid` function. With the United States being as large as it is, we'd need to filter on one of the 50 states and can't get country level data. So we'll look at just Russia, Brazil, and Mexico. 
+
+```{r}
+russia <- covid("dayone", "Russian Federation", "country")
+brazil <- covid("dayone", "Brazil", "country")
+mexico <- covid("dayone", "Mexico", "country")
+
+# combines the 3 datasets into one to put the next couple plots side by side
+boxes <- rbind(russia, brazil, mexico)
+
+ggplot(boxes, aes(x = Country, y = Confirmed)) +
+  geom_boxplot() +
+  labs(title = "Confirmed Cases by Country", y = "Confirmed Cases")
+```
+
+```{r}
+ggplot(boxes, aes(x = Country, y = Deaths)) +
+  geom_boxplot() +
+  labs(title = "Deaths by Country")
+```
+
+So we can see that Brazil has had much higher confirmed numbers and also more deaths. Since this is a highly populated country, this would make sense. The interesting aspect of this is that Russia has more median number of confirmed cases compared to Mexico, but Mexico has a higher median of deaths than Russia. 
+
+To dive in a little deeper with the United States we need to choose a state. I've been in Wisconsin during the whole pandemic, so I'm interested to see what our numbers look like. This will bring in data for each of the counties in Wisconsin as well, so we can choose to see it at either a state or county level. 
+
+```{r}
+wisco <- covid("dayone", "US", "id", status = "all", "wisconsin", "name")
+# fitler on trempealeau county
+tremp <- wisco %>% filter(City == "Trempealeau")
+
+# get state level data for confirmed, deaths, and recovered
+wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered), Active = sum(Active))
+```
+
+First we'll examine this at a state level.
+
+```{r}
+
+```
 
