@@ -180,7 +180,7 @@ getCountry <- function(country, IDType){
   }
   
   if(nrow(output) == 0){
-    stop("ERROR: Country not found. Check spelling and possible capitalization")
+    stop("ERROR: Country not found. Check spelling, possible capitalization, or IDType")
   }
   return(output)
 }
@@ -218,72 +218,90 @@ getState <- function(state, type = "name"){
 ```
 
 
-## `covidDetails`
+## `dayOne`
 
-This function will get data fromt he Day One API. The user will need to specify the county and IDType to be able to get the data, but then have the option to leave the other variables as their default value which will not filter the data any further. The options they have are the status, province, city, type and date range. The status will be 
+Difference versus day one and by country live is the start date. The day one starts when the first case enters the country until the most recent data while the live starts in january 2020 (probably the first case globally) until the most recent data.
+
+Quick notes
+It seems like they can only filter on the time range or province in the url
+The date is still there after filtering on the province (i.e. Wisconsin) so they could still see a certain range, but that will need to be fitlered after getting the data 
+They also need to have a status of confirmed, deaths, or recovered
 
 ```{r}
-covidDetails <- function(country, IDType, status = "all", province = "all", city = "all",  type = "none"){
-  # removes any upper case letters the user may input to prevent the API from not returning any data
-  province <- tolower(province)
+dayOne <- function(country, IDType, status = "all", province = "all", provType, city = "all", fromDate = "", toDate = ""){
   status <- tolower(status)
-  type <- tolower(type)
-  
-  if(type == "none"){
-    main <- "https://api.covid19api.com/dayone/country/"
-  } else if(type == "total"){
-    main <- "https://api.covid19api.com/total/dayone/country/"
+  if(!(status %in% c("all", "confirmed", "deaths", "recovered"))){
+    stop("Status has to be one of the following: all, confirmed, deaths, recovered")
   }
   
-
+  main <- "https://api.covid19api.com/dayone/country/"
   country <- getCountry(country, IDType)
   
+  # This gets the main part of the url for the country the user wants to see data for
   url <- paste0(main, country)
-
   
-  # This adjusts the url to fit what the user inputs or doesn't input for the status and province
-  if(province != "all" & status != "all"){
-    url <- paste0(url, "/status/", status, "?province=", province)
-  } else if(province != "all" & status == "all"){
+  # This first checks to see if the user wants to see a specific type of status and put that into the url
+  if(status != "all"){
+    url <- paste0(url, "/status/", status)
+  } # if they leave the status as all, they can specify the province, city, or date range
+  
+  # This will return country level data if possible, might return a 
+  if(province == "all"){
+    getAPI <- GET(url)
+    dat <- fromJSON(rawToChar(getAPI$content))
+    output <- as_tibble(dat)
+    
+  } else {
+    province <- getState(province, type = provType)
     url <- paste0(url, "?province=", province)
-  } else if(province == "all" & status != "all"){
-    url <- paste0(url, "status/", status)
+    getAPI <- GET(url)
+    dat <- fromJSON(rawToChar(getAPI$content))
+    output <- as_tibble(dat)
   }
   
-  return(url)
-}
-  
-```
-
-```{r}
-covidDetails("SA", "id")
-```
-
-```{r}
-getAPI <- GET("https://api.covid19api.com/dayone/country/south-africa/live")
-dat <- fromJSON(rawToChar(getAPI$content))
-as_tibble(dat)
-```
-
-
-```{r}
-dayOneTotal("AL", "id")
-```
-
-## `dayOneLive`
-
-```{r}
-dayOneLive <- function(country, IDType, status = "confirmed", province = "all"){
-  main <- "https://api.covid19api.com/country/"
-  country <- getCountry(country, IDType)
-  
-  url <- paste0(main, country, "/status/", status, "live")
-  
-  # puts the province input as all lower case letters
-  province <- tolower(province)
-  if(province != "all"){
-    url <- paste0(url, "?province=", )
+  if(output == "for performance reasons, please specify a province"){
+    stop("Please specify a province for this country")
   }
+  
+  # if there is a status that will change the data frame 
+  # this will remove any unnecessary information from the output
+  if(status == "all"){
+    output <- output %>% select("Country", "Province", "City", "Confirmed", "Deaths", "Recovered", "Active", "Date") %>% mutate(Date = as.Date(Date))
+  } else {
+    output <- output %>% select("Country", "Province", "City", "Cases", "Status", "Date") %>% mutate(Date = as.Date(Date))
+  }
+  
+  if(city != "all"){
+    # Create a vector of all the cities for the selected province in case of a wrong input
+    cities <- sort(unique(output$City))
+    output <- output %>% filter(City == city)
+    # If the city isn't in the data set, the above code will return a data frame with 0 rows
+    if(nrow(output) == 0){
+      stop(paste("ERROR: Please select one of these cities for the selected province: ", paste(cities, collapse = ", "), sep = " "))
+    }
+  }
+  
+  # if the user specifies either the toDate and/or fromDate, this will filter the data set 
+  if(toDate != ""){
+    check <- nrow(output)
+    output <- output %>% filter(Date <= as.Date(toDate))
+    
+    if(nrow(output) == check | nrow(output) == 0){
+      stop("Plesae enter date in year-month-day format. Data wasn't filtered on this date")
+    }
+    
+  }
+  
+  if(fromDate != ""){
+    check <- nrow(output)
+    output <- output %>% filter(Date >= as.Date(fromDate))
+    
+    if(nrow(output) == check | nrow(output) == 0){
+      stop("Plesae enter date in year-month-day format. Data wasn't filtered on this date")
+    }
+  }
+  
+  return(output)
 }
 ```
 
@@ -292,155 +310,14 @@ Testing to see if this will work as an error for the total function
 
 It works for this one!!!!
 ```{r}
-getAPI <- GET("https://api.covid19api.com/country/united-states/status/confirmed/live?province=wi")
+getAPI <- GET("https://api.covid19api.com/dayone/country/united-states/status/confirmed?province=wv")
 dat <- fromJSON(rawToChar(getAPI$content))
 test <- as_tibble(dat)
 test
 ```
 
-```{r}
-# Dane county in Wisconsin
-getAPI <- GET("https://api.covid19api.com/country/united-states?province=wisconsin")
-dat <- fromJSON(rawToChar(getAPI$content))
-data <- as_tibble(dat)
 
-data %>% filter(City == "Dane")
-```
-
-```{r}
-#getAPI <- GET("https://api.covid19api.com/dayone/country/united-states?province=wisconsin")
-#dat <- fromJSON(rawToChar(getAPI$content))
-#data <- as_tibble(dat)
-#data
-county <- toString(sort(unique(data$City)))
-print(paste("Please select one of the following:", county))
-print(county)
-
-teststring <- toString(county)
-teststring
-```
-
-
-The `total` function collects data from the API 
-
-
-########### add in a time filter to this 
-```{r}
-total <- function(country, IDType, status = "all") {
-  # get the total covid numbers for a country by day
-  # user has the option to get all numbers or just confirmed, recovered, or deaths
-  # Find an easy way to get the date in here along with the other functions
-  # Date needs to be added in after the country and case portions
-  status <- tolower(status)
-  
-  if(status == "all"){
-    main <- "https://api.covid19api.com/total/country/"
-    country <- getCountry(country, IDType)
-    url <- paste0(main, country)
-    getAPI <- GET(url)
-    dat <- fromJSON(rawToChar(getAPI$content))
-    output <- as_tibble(dat)
-    
-    output <- output %>% mutate(Date = as.Date(Date))
-    
-  } else if(status != "all"){
-    main <- "https://api.covid19api.com/total/country/"
-    country <- getCountry(country, IDType)
-    url <- paste0(main, country, "/status/", status)
-    getAPI <- GET(url)
-    dat <- fromJSON(rawToChar(getAPI$content))
-    output <- as_tibble(dat)
-    
-    output <- output %>% mutate(Date = as.Date(Date))
-  } 
-  if(output[1,1] == ""){
-    stop("ERROR: make sure case is either all, confirmed, recovered, or deaths")
-  }
-  return(output)
-}
-
-total(country= "US", IDType = "id", status = "Deaths")
-```
-
-## `live`
-
-Live data for each country
-```{r}
-live <- function(country, IDType, case = "all", province = "all") {
-  # get the total covid numbers for a country by day
-  # user has the option to get all numbers or just confirmed, recovered, or deaths
-  if(case == "all"){
-    main <- "https://api.covid19api.com/live/country/"
-    country <- getCountry(country, IDType)
-    url <- paste0(main, country)
-    getAPI <- GET(url)
-    dat <- fromJSON(rawToChar(getAPI$content))
-    output <- as_tibble(dat)
-    
-  } else if(case != "all"){
-    main <- "https://api.covid19api.com/live/country/"
-    country <- getCountry(country, IDType)
-    url <- paste0(main, country, "/status/", case)
-    getAPI <- GET(url)
-    dat <- fromJSON(rawToChar(getAPI$content))
-    output <- as_tibble(dat)
-  } 
-  # the country will be missing but it will still have a dataframe of more than 1 row if there's something wrong with the output
-  # this will check to see if that error happened to let the user know
-  if(output[1,1] == ""){
-    stop("ERROR: make sure case is either all, confirmed, recovered, or deaths")
-  }
-  
-  if(province != "all"){
-    output <- output %>% filter(Province == province)
-  }
-  
-  return(output)
-}
-```
-
-```{r}
-live(country = "US", IDType = "id", case = " all", province = "Wisconsin")
-
-```
-
-
-Day one data for each country
-```{r}
-dayOne <- function(country, IDType, case = "all", province = "all") {
-  # get the total covid numbers for a country by day
-  # user has the option to get all numbers or just confirmed, recovered, or deaths
-  if(case == "all"){
-    main <- "https://api.covid19api.com/dayone/country/"
-    country <- getCountry(country, IDType)
-    url <- paste0(main, country)
-    getAPI <- GET(url)
-    dat <- fromJSON(rawToChar(getAPI$content))
-    output <- as_tibble(dat)
-    
-  } else if(case != "all"){
-    main <- "https://api.covid19api.com/dayone/country/"
-    country <- getCountry(country, IDType)
-    url <- paste0(main, country, "/status/", case)
-    getAPI <- GET(url)
-    dat <- fromJSON(rawToChar(getAPI$content))
-    output <- as_tibble(dat)
-  } 
-  if(output[1,1] == ""){
-    stop("ERROR: make sure case is either all, confirmed, recovered, or deaths")
-  }
-  
-  if(province != "all"){
-    output <- output %>% filter(Province == province)
-  }
-  
-  return(output)
-}
-```
-
-```{r}
-dayOne(country = "AU", IDType = "id", case = "deaths")
-```
+## `covid`
 
 Create one final function that uses the other functions above to collect whatever data is needed
 ```{r}
@@ -460,11 +337,6 @@ covid <- function(func, ...){
 }
 ```
 
-```{r}
-covid("summary", "country")
-
-covid("live", "gb", "id", "confirmed") %>% arrange(Province, Date) #%>% filter(Province == "Wisconsin")
-```
 
 Trying to get the province since some countries like the united states won't allow for the whole thing to be brought in because it's too large.
 ```{r}
