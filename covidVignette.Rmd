@@ -189,7 +189,7 @@ getCountry <- function(country, IDType){
 
 ## `getState`
 
-This acts in a similar way to the `getCountry` function. Some of the APIs require us to filter down either by time or province after selecting the province. So if we wanted data on the United States, we may need to filter by one of those two things. If we wanted to see Wisconsin's data, that is easy to put into the url and get the data. But for states like West Virginia where there are more than one word in the state's name, this has to be the two letter abbreviation of the state. This function will let the user choose either option for the state if they need to filter down the United States data. There may be a similar issue with provinces in other countries, but there doesn't seem to be anything in R to account for that at this time. 
+This acts in a similar way to the `getCountry` function. Some of the APIs require us to filter down either by time or province after selecting the province. So if we wanted data on the United States, we may need to filter by one of those two things. If we wanted to see Wisconsin's data, that is easy to put into the url and get the data. But for states like West Virginia where there are more than one word in the state's name, this has to be the two letter abbreviation of the state. This function will let the user choose either option for the state if they need to filter down the United States data. There may be a similar issue with provinces in other countries, but there doesn't seem to be anything in R to account for that at this time. This function defaults to the state name and has a built in error message if the user doesn't spell the state corecctly or uses the right abbrevation.
 
 ```{r}
 getState <- function(state, type = "name"){
@@ -209,10 +209,13 @@ getState <- function(state, type = "name"){
     output <- states %>% filter(abbreviation == state) %>% select(abbreviation)
   }
   
+  if(nrow(output) == 0){
+    stop("EROR: Make sure the state name is spelled correctly or the proper abbrevation")
+  }
+  
   return(output)
 }
 ```
-
 
 
 ## `covidDetails`
