@@ -11,6 +11,7 @@ Xavier Genelin
     -   [`dayOne`](#dayone)
     -   [`covid`](#covid)
 -   [Data Exporation](#data-exporation)
+-   [Wrap Up](#wrap-up)
 
 This document is a vignette that’ll show how we can retrieve data from
 an API and perform exploratory analysis. This will use the [Covid
@@ -30,13 +31,15 @@ return, the following packages will need to be installed and used:
 -   `countrycode`: this lets us tie the country name to the continent
     which is defined by the World Bank Development Indicators. The
     Republic of Kosovo is the only one that seems to be missing the
-    continent. This is located in Europe and will be added
+    continent. This is located in Europe and will be added  
+-   `knitr`: used to create a table for summary statistics
 
 ``` r
 library(tidyverse)
 library(httr)
 library(jsonlite)
 library(countrycode)
+library(knitr)
 ```
 
 This also uses the `state.abb` and `state.name` from the `state`
@@ -347,13 +350,13 @@ par(mfrow = c(2,1))
 plot1
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
 plot2
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-32-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->
 
 Plot of the top 15 countries with the highest death percentage with
 confirmed cases above 100. The bars have the total confirmed cases to
@@ -369,7 +372,7 @@ ggplot(data = check, aes(x = Country, y = percentDeath)) +
   geom_text(aes(label = TotalConfirmed), size = 2.5, vjust = -0.2)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 We can see there’s a decent mix of continents that have the highest
 death percentages overall, but this may not be a good indicator of how
@@ -403,7 +406,7 @@ ggplot(country, aes(x = NewConfirmed, y = NewDeaths)) +
   labs(title = "New Covid Cases vs New Covid Deaths", x = "New Cases", y = "New Deaths")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 There seems to be a lot of variation in deaths with high number of
 cases. We can also see that 3 of the top 4 death numbers are from the
@@ -443,7 +446,7 @@ ggplot(boxes, aes(x = Country, y = Confirmed)) +
   labs(title = "Confirmed Cases by Country", y = "Confirmed Cases")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ``` r
 ggplot(boxes, aes(x = Country, y = Deaths)) +
@@ -451,7 +454,7 @@ ggplot(boxes, aes(x = Country, y = Deaths)) +
   labs(title = "Deaths by Country")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 So we can see that Brazil has had much higher confirmed numbers and also
 more deaths. Since this is a highly populated country, this would make
@@ -474,7 +477,8 @@ tremp <- wisco %>% filter(City == "Trempealeau") %>% select(Confirmed, Deaths, R
 wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
 ```
 
-First we’ll examine this at a state level.
+First we’ll examine this at a state level and then Trempealeau county in
+Wisconsin (this is my county).
 
 ``` r
 ggplot(wisco, aes(x = Confirmed)) +
@@ -482,7 +486,7 @@ ggplot(wisco, aes(x = Confirmed)) +
   labs(title = "Histogram of Confirmed Cases in Wisconsin")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 ``` r
 ggplot(tremp, aes(x = Confirmed)) +
@@ -490,7 +494,7 @@ ggplot(tremp, aes(x = Confirmed)) +
   labs(title = "Histogram of Confirmed Cases in Trempealeau County")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 Both of these look to be distributed similarly, although on different
 scales due to the difference in populations. The cases aren’t the entire
@@ -502,7 +506,7 @@ badgers <- gather(wisco, status, value, Confirmed, Deaths, Recovered)
 
 output <- badgers %>% group_by(status) %>% summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), avg = mean(value), q3 = quantile(value, 0.75), max = max(value))
 
-knitr::kable(output)
+kable(output)
 ```
 
 | status    |    min |       q1 |    med |        avg |     q3 |    max |
@@ -510,3 +514,36 @@ knitr::kable(output)
 | Confirmed | 376238 | 601823.5 | 658696 | 636114.679 | 679715 | 814187 |
 | Deaths    |   3150 |   6638.5 |   7534 |   7161.229 |   8197 |   8901 |
 | Recovered |      0 |      0.0 |      0 |      0.000 |      0 |      0 |
+
+It’s interesting to see that the recovered numbers are all 0 for the
+state level. This could be something specific with the API or something
+else that is going wrong. We do a similar analysis for country levels as
+well. Let’s take a look at how the numbers look for the place where this
+all started, China.
+
+``` r
+china <- covid("dayone", "China", "country")
+
+china <- china %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
+
+results <- gather(china, status, value, Confirmed, Deaths, Recovered) %>% group_by(status) %>% summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), avg = mean(value), q3 = quantile(value, 0.75), max = max(value))
+
+kable(results)
+```
+
+| status    | min |       q1 |     med |       avg |        q3 |    max |
+|:----------|----:|---------:|--------:|----------:|----------:|-------:|
+| Confirmed | 548 | 84694.00 | 92537.0 | 91594.852 | 102499.75 | 108528 |
+| Deaths    |  17 |  4640.75 |  4742.0 |  4429.039 |   4845.25 |   4849 |
+| Recovered |   0 | 78394.25 | 85410.5 | 74104.931 |  95726.50 |  99228 |
+
+Unlike when we examined the Wisconsin data set, the China data set does
+have recovered numbers.
+
+# Wrap Up
+
+This vignette is just a small part of what someone can do with the Covid
+API. There are other endpoints within the API that one can go to, and
+within each of the endpoints there are countless things someone can
+examine with this. This did some exploratory analysis into summary data
+and country, state, and county level data.

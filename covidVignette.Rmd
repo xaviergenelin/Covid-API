@@ -21,13 +21,15 @@ To be able to interact with the API and manipulate the data we want to return, t
 * `tidyverse`: this package will allow us to manipulate and visualize the data  
 * `httr`: gives us a response object from the API url   
 * `jsonlite`: allows us to interact with the API  
-* `countrycode`: this lets us tie the country name to the continent which is defined by the World Bank Development Indicators. The Republic of Kosovo is the only one that seems to be missing the continent. This is located in Europe and will be added     
+* `countrycode`: this lets us tie the country name to the continent which is defined by the World Bank Development Indicators. The Republic of Kosovo is the only one that seems to be missing the continent. This is located in Europe and will be added    
+* `knitr`: used to create a table for summary statistics  
 
 ```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(httr)
 library(jsonlite)
 library(countrycode)
+library(knitr)
 ```
 
 This also uses the `state.abb` and `state.name` from the `state` dataset. 
@@ -366,7 +368,7 @@ tremp <- wisco %>% filter(City == "Trempealeau") %>% select(Confirmed, Deaths, R
 wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
 ```
 
-First we'll examine this at a state level.
+First we'll examine this at a state level and then Trempealeau county in Wisconsin (this is my county).
 
 ```{r}
 ggplot(wisco, aes(x = Confirmed)) +
@@ -387,6 +389,28 @@ badgers <- gather(wisco, status, value, Confirmed, Deaths, Recovered)
 
 output <- badgers %>% group_by(status) %>% summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), avg = mean(value), q3 = quantile(value, 0.75), max = max(value))
 
-knitr::kable(output)
+kable(output)
 ```
+
+It's interesting to see that the recovered numbers are all 0 for the state level. This could be something specific with the API or something else that is going wrong. We do a similar analysis for country levels as well. Let's take a look at how the numbers look for the place where this all started, China.
+
+```{r}
+china <- covid("dayone", "China", "country")
+
+china <- china %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
+
+results <- gather(china, status, value, Confirmed, Deaths, Recovered) %>% group_by(status) %>% summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), avg = mean(value), q3 = quantile(value, 0.75), max = max(value))
+
+kable(results)
+```
+
+Unlike when we examined the Wisconsin data set, the China data set does have recovered numbers. 
+
+
+# Wrap Up
+
+This vignette is just a small part of what someone can do with the Covid API. There are other endpoints within the API that one can go to, and within each of the endpoints there are countless things someone can examine with this. This did some exploratory analysis into summary data and country, state, and county level data. 
+
+
+
 
