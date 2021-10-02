@@ -345,7 +345,7 @@ ggplot(data = topCountry, aes(x = Country, y = percentDeath)) +
   geom_text(aes(label = TotalConfirmed), size = 2.5, vjust = -0.2)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 We can see there’s a decent mix of continents that have the highest
 death percentages overall, but this may not be a good indicator of how
@@ -385,7 +385,7 @@ ggplot(country, aes(x = NewConfirmed, y = NewDeaths)) +
   labs(title = "New Covid Cases vs New Covid Deaths", x = "New Cases", y = "New Deaths")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 There seems to be a lot of variation in deaths with high number of
 cases. We can also see that 3 of the top 4 death numbers are from the
@@ -426,7 +426,7 @@ ggplot(boxes, aes(x = Country, y = Confirmed)) +
   labs(title = "Confirmed Cases by Country", y = "Confirmed Cases")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
 ggplot(boxes, aes(x = Country, y = Deaths)) +
@@ -434,7 +434,7 @@ ggplot(boxes, aes(x = Country, y = Deaths)) +
   labs(title = "Deaths by Country")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 So we can see that Brazil has had much higher confirmed numbers and also
 more deaths compared to Brazil and Russia. Since this is a highly
@@ -467,7 +467,7 @@ ggplot(wisco, aes(x = Confirmed)) +
   labs(title = "Histogram of Confirmed Cases in Wisconsin")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
 ggplot(tremp, aes(x = Confirmed)) +
@@ -475,7 +475,7 @@ ggplot(tremp, aes(x = Confirmed)) +
   labs(title = "Histogram of Confirmed Cases in Trempealeau County")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 Both of these look to be distributed similarly, although on different
 scales due to the difference in populations. The cases aren’t the entire
