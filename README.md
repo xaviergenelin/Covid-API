@@ -347,13 +347,13 @@ par(mfrow = c(2,1))
 plot1
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 ``` r
 plot2
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-54-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-32-2.png)<!-- -->
 
 Plot of the top 15 countries with the highest death percentage with
 confirmed cases above 100. The bars have the total confirmed cases to
@@ -369,7 +369,7 @@ ggplot(data = check, aes(x = Country, y = percentDeath)) +
   geom_text(aes(label = TotalConfirmed), size = 2.5, vjust = -0.2)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 We can see there’s a decent mix of continents that have the highest
 death percentages overall, but this may not be a good indicator of how
@@ -403,7 +403,7 @@ ggplot(country, aes(x = NewConfirmed, y = NewDeaths)) +
   labs(title = "New Covid Cases vs New Covid Deaths", x = "New Cases", y = "New Deaths")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 There seems to be a lot of variation in deaths with high number of
 cases. We can also see that 3 of the top 4 death numbers are from the
@@ -443,7 +443,7 @@ ggplot(boxes, aes(x = Country, y = Confirmed)) +
   labs(title = "Confirmed Cases by Country", y = "Confirmed Cases")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-59-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 ``` r
 ggplot(boxes, aes(x = Country, y = Deaths)) +
@@ -451,7 +451,7 @@ ggplot(boxes, aes(x = Country, y = Deaths)) +
   labs(title = "Deaths by Country")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-60-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
 So we can see that Brazil has had much higher confirmed numbers and also
 more deaths. Since this is a highly populated country, this would make
@@ -468,7 +468,7 @@ it at either a state or county level.
 ``` r
 wisco <- covid("dayone", "US", "id", status = "all", "wisconsin", "name")
 # fitler on trempealeau county
-tremp <- wisco %>% filter(City == "Trempealeau")
+tremp <- wisco %>% filter(City == "Trempealeau") %>% select(Confirmed, Deaths, Recovered, Date)
 
 # get state level data for confirmed, deaths, recovered
 wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deaths = sum(Deaths), Recovered = sum(Recovered))
@@ -477,37 +477,36 @@ wisco <- wisco %>% group_by(Date) %>% summarize(Confirmed = sum(Confirmed), Deat
 First we’ll examine this at a state level.
 
 ``` r
-test <- gather(wisco, status, value, Confirmed, Deaths, Recovered)
-test
-```
-
-    ## # A tibble: 945 x 3
-    ##    Date       status     value
-    ##    <date>     <chr>      <int>
-    ##  1 2020-11-22 Confirmed 376238
-    ##  2 2020-11-23 Confirmed 379693
-    ##  3 2020-11-24 Confirmed 386441
-    ##  4 2020-11-25 Confirmed 392438
-    ##  5 2020-11-26 Confirmed 398104
-    ##  6 2020-11-27 Confirmed 399526
-    ##  7 2020-11-28 Confirmed 404999
-    ##  8 2020-11-29 Confirmed 409054
-    ##  9 2020-11-30 Confirmed 411730
-    ## 10 2020-12-01 Confirmed 416365
-    ## # ... with 935 more rows
-
-``` r
 ggplot(wisco, aes(x = Confirmed)) +
-  geom_histogram() +
+  geom_histogram(color = "black", fill = "red", bins = 50) +
   labs(title = "Histogram of Confirmed Cases in Wisconsin")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-62-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
 ``` r
 ggplot(tremp, aes(x = Confirmed)) +
-  geom_histogram() +
+  geom_histogram(color = "black", fill = "red", bins = 50) +
   labs(title = "Histogram of Confirmed Cases in Trempealeau County")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+
+Both of these look to be distributed similarly, although on different
+scales due to the difference in populations. The cases aren’t the entire
+story of this though. There are also people that recover from this daily
+and also unfortunately die. We can look at Wisconsin
+
+``` r
+badgers <- gather(wisco, status, value, Confirmed, Deaths, Recovered)
+
+output <- badgers %>% group_by(status) %>% summarize(min = min(value), q1 = quantile(value, 0.25), med = median(value), avg = mean(value), q3 = quantile(value, 0.75), max = max(value))
+
+knitr::kable(output)
+```
+
+| status    |    min |       q1 |    med |        avg |     q3 |    max |
+|:----------|-------:|---------:|-------:|-----------:|-------:|-------:|
+| Confirmed | 376238 | 601823.5 | 658696 | 636114.679 | 679715 | 814187 |
+| Deaths    |   3150 |   6638.5 |   7534 |   7161.229 |   8197 |   8901 |
+| Recovered |      0 |      0.0 |      0 |      0.000 |      0 |      0 |
