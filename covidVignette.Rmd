@@ -1,7 +1,7 @@
 ---
 title: "Covid Vignette"
 author: "Xavier Genelin"
-date: "9/30/2021"
+date: "10/2/2021"
 output: 
   github_document:
     toc: True
@@ -152,21 +152,6 @@ covidSummary <- function(type, continent = "all"){
 }
 ```
 
-```{r}
-covidSummary("country")
-
-```
-
-
-
-```{r}
-getAPI <- GET("https://api.covid19api.com/countries")
-
-dat <- fromJSON(rawToChar(getAPI$content))
-
-as_tibble(dat)
-```
-
 ## `getCountry`
 
 The next function will allow the user to either type out the country name, country code, or slug it will return the slug value. This is necessary because country filters need to be the slug, so the user can choose anything and not have later functions error out. So for example, if someone wanted to get data on the United States, they would either have to type in "United States of America", "united-states", "US", or "us".
@@ -202,16 +187,112 @@ getCountry <- function(country, IDType){
 
 ```
 
+## `getState`
+
+This acts in a similar way to the `getCountry` function. Some of the APIs require us to filter down either by time or province after selecting the province. So if we wanted data on the United States, we may need to filter by one of those two things. If we wanted to see Wisconsin's data, that is easy to put into the url and get the data. But for states like West Virginia where there are more than one word in the state's name, this has to be the two letter abbreviation of the state. This function will let the user choose either option for the state if they need to filter down the United States data. There may be a similar issue with provinces in other countries, but there doesn't seem to be anything in R to account for that at this time. 
+
+```{r}
+getState <- function(state, type = "name"){
+  states <- data.frame(abbreviation = state.abb, name = state.name)
+  
+  # removes any capitalization that the user may input
+  type <- tolower(type)
+  
+  if(type == "name"){
+    # This capitalizes the first letter of each word 
+    # Prevents the filter from getting nothing if the user doesn't enter it properly
+    state <- str_to_title(state)
+    output <- states %>% filter(name == state) %>% select(abbreviation)
+  } else{
+    # Capitalizes each letter if the user doesn't to prevent it from returning nothing
+    state <- toupper(state)
+    output <- states %>% filter(abbreviation == state) %>% select(abbreviation)
+  }
+  
+  return(output)
+}
+```
+
+
+
+## `covidDetails`
+
+This function will get data fromt he Day One API. The user will need to specify the county and IDType to be able to get the data, but then have the option to leave the other variables as their default value which will not filter the data any further. The options they have are the status, province, city, type and date range. The status will be 
+
+```{r}
+covidDetails <- function(country, IDType, status = "all", province = "all", city = "all",  type = "none"){
+  # removes any upper case letters the user may input to prevent the API from not returning any data
+  province <- tolower(province)
+  status <- tolower(status)
+  type <- tolower(type)
+  
+  if(type == "none"){
+    main <- "https://api.covid19api.com/dayone/country/"
+  } else if(type == "total"){
+    main <- "https://api.covid19api.com/total/dayone/country/"
+  }
+  
+
+  country <- getCountry(country, IDType)
+  
+  url <- paste0(main, country)
+
+  
+  # This adjusts the url to fit what the user inputs or doesn't input for the status and province
+  if(province != "all" & status != "all"){
+    url <- paste0(url, "/status/", status, "?province=", province)
+  } else if(province != "all" & status == "all"){
+    url <- paste0(url, "?province=", province)
+  } else if(province == "all" & status != "all"){
+    url <- paste0(url, "status/", status)
+  }
+  
+  return(url)
+}
+  
+```
+
+```{r}
+covidDetails("SA", "id")
+```
+
+```{r}
+getAPI <- GET("https://api.covid19api.com/dayone/country/south-africa/live")
+dat <- fromJSON(rawToChar(getAPI$content))
+as_tibble(dat)
+```
+
+
+```{r}
+dayOneTotal("AL", "id")
+```
+
+## `dayOneLive`
+
+```{r}
+dayOneLive <- function(country, IDType, status = "confirmed", province = "all"){
+  main <- "https://api.covid19api.com/country/"
+  country <- getCountry(country, IDType)
+  
+  url <- paste0(main, country, "/status/", status, "live")
+  
+  # puts the province input as all lower case letters
+  province <- tolower(province)
+  if(province != "all"){
+    url <- paste0(url, "?province=", )
+  }
+}
+```
+
 
 Testing to see if this will work as an error for the total function
 
 It works for this one!!!!
 ```{r}
-getAPI <- GET("https://api.covid19api.com/country/united-states/status/confirmed/live?province=ohio")
+getAPI <- GET("https://api.covid19api.com/country/united-states/status/confirmed/live?province=wi")
 dat <- fromJSON(rawToChar(getAPI$content))
-data <- as_tibble(dat)
-
-data %>% arrange(City)
+test <- as_tibble(dat)
+test
 ```
 
 ```{r}
