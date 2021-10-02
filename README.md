@@ -325,7 +325,7 @@ kable(covid("summary", "global"))
 
 | NewConfirmed | TotalConfirmed | NewDeaths | TotalDeaths | NewRecovered | TotalRecovered | Date       | percentDeath |
 |-------------:|---------------:|----------:|------------:|-------------:|---------------:|:-----------|-------------:|
-|       340712 |      234287358 |      5699 |     4794400 |            0 |              0 | 2021-10-04 |         2.05 |
+|       319238 |      234425950 |      5378 |     4796297 |            0 |              0 | 2021-10-04 |         2.05 |
 
 Plot of the top 15 countries with the highest death percentage with
 confirmed cases above 100. The bars have the total confirmed cases to
@@ -344,7 +344,7 @@ ggplot(data = topCountry, aes(x = Country, y = percentDeath)) +
   geom_text(aes(label = TotalConfirmed), size = 2.5, vjust = -0.2)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 We can see there’s a decent mix of continents that have the highest
 death percentages overall, but this may not be a good indicator of how
@@ -378,7 +378,7 @@ ggplot(country, aes(x = NewConfirmed, y = NewDeaths)) +
   labs(title = "New Covid Cases vs New Covid Deaths", x = "New Cases", y = "New Deaths")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 There seems to be a lot of variation in deaths with high number of
 cases. We can also see that 3 of the top 4 death numbers are from the
@@ -418,7 +418,7 @@ ggplot(boxes, aes(x = Country, y = Confirmed)) +
   labs(title = "Confirmed Cases by Country", y = "Confirmed Cases")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ``` r
 ggplot(boxes, aes(x = Country, y = Deaths)) +
@@ -426,7 +426,7 @@ ggplot(boxes, aes(x = Country, y = Deaths)) +
   labs(title = "Deaths by Country")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 So we can see that Brazil has had much higher confirmed numbers and also
 more deaths. Since this is a highly populated country, this would make
@@ -458,7 +458,7 @@ ggplot(wisco, aes(x = Confirmed)) +
   labs(title = "Histogram of Confirmed Cases in Wisconsin")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
 ggplot(tremp, aes(x = Confirmed)) +
@@ -466,7 +466,7 @@ ggplot(tremp, aes(x = Confirmed)) +
   labs(title = "Histogram of Confirmed Cases in Trempealeau County")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 Both of these look to be distributed similarly, although on different
 scales due to the difference in populations. The cases aren’t the entire
