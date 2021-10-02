@@ -11,8 +11,6 @@ output:
 ############## Current idea of what to do with this
 Rework the live, total, and oneDay functions to allow the user to select a date range, province, and city/city code. Probably just the city because the code was a little odd. Not sure how it's choosing that. I should be able to print the list of options from the choices by using `toString(sort(unique(data$City)))`. Maybe make a function for that too, idk. 
 
-Maybe having a function for live, total and oneday isn't the way to go?
-
 The current issue is some of the urls don't work in the same order by just adding on things at the end. I'll have to go into the API site to see which one should be used for what the user might filter on. 
 
 After that the visuals/EDA should be it for creating the vignette and then move on to the blog and stuff. 
@@ -40,65 +38,9 @@ library(jsonlite)
 library(countrycode)
 ```
 
-
-
-
-urls for each type to refer back to 
-```{r}
-#day one: "https://api.covid19api.com/dayone/country/south-africa"
-#by country: "https://api.covid19api.com/country/south-africa"
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-cities <- c("Wake", "Durham", "Johnston")
-
-paste("Please select: ", paste(cities, collapse = ","), sep = " ")
-```
-
-```{r}
-# Day one all status
-getAPI <- GET("https://api.covid19api.com/dayone/country/south-africa/status/confirmed/live")
-
-dat <- fromJSON(rawToChar(getAPI$content))
-
-test1 <- as_tibble(dat)
-test1
-test1 %>% arrange(desc(Date))
-
-test1$continent <- countrycode(test1$Country, origin = "country.name", destination = "continent")
-```
-
-```{r}
-# day one live 
-getAPI <- GET("https://api.covid19api.com/dayone/country/south-africa/status/deaths/live")
-
-dat <- fromJSON(rawToChar(getAPI$content))
-
-test2 <- as_tibble(dat)
-test2 %>% arrange(desc(Date))
-test2
-```
-
-
 # Functions
 
-This will be used in each of the functions to get the data from the API. Just an example for easy copying
-```{r}
-getAPI <- GET("https://api.covid19api.com/all")
-
-dat <- fromJSON(rawToChar(getAPI$content))
-
-as_tibble(dat)
-covidSummary("global")
-```
+The following functions help get the data from the covid API that allows the users to select the type of data they want to see. 
 
 ## `covidSummary`
 
@@ -141,7 +83,7 @@ covidSummary <- function(type, continent = "all"){
       
         if(nrow(output) == 0){
           # If the user selects a continent that isn't in the data set, it provides a list to choose from
-          stop(paste("Please select one of the following continents: ", paste(continents, collapse = ","), sep = " "))
+          stop(paste("Please select one of the following continents: ", paste(sort(continents), collapse = ", "), sep = " "))
         }
       }
   }
@@ -322,28 +264,23 @@ test
 Create one final function that uses the other functions above to collect whatever data is needed
 ```{r}
 covid <- function(func, ...){
-  if(func == "total"){
-    output <- total(...)
-  } else if(func == "live"){
-    output <- live(...)
-  } else if(func == "dayOne"){
-    output <- dayOne(...)
-  } else if(func == "summary"){
+  func <- tolower(func)
+  
+  if(func == "summary"){
     output <- covidSummary(...)
+  } else if(func == "dayone"){
+    output <- dayOne(...)
   } else {
-    stop("ERROR: choose total, live, dayOne, or summary as function")
+    stop("Please select either summary or dayone")
   }
   return(output)
 }
 ```
 
-
-Trying to get the province since some countries like the united states won't allow for the whole thing to be brought in because it's too large.
 ```{r}
-test <- GET("https://api.covid19api.com/dayone/country/united-states")
-another <- fromJSON(rawToChar(test$content))
-print(another)
+covid("Summary", "Country", continent = "Americas")
 ```
+
 
 
 
