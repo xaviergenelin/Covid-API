@@ -287,12 +287,11 @@ covid("Summary", "Country", continent = "Americas")
 # Data Exporation
 
 Make a scatter plot of values for the country summary with continents in different colors or totals in bars. Maybe both
+
 ```{r}
-regionData <- covidSummary("country")
-regionData
-ggplot(data = regionData, aes(x = NewDeaths, y = NewConfirmed)) + 
-  geom_point(aes(color = Continent))
+regionData <- covid("summary", "country")
 ```
+
 
 ```{r}
 ggplot(data = regionData, aes(x = Continent, y = NewConfirmed)) + 
@@ -304,13 +303,15 @@ ggplot(data = regionData, aes(x = Continent, y = TotalConfirmed)) +
   labs(title = "Total Confirmed Cases by Continent")
 ```
 
-Trying something quick. Plot the top 10-15 countires with the highest new confirmed or new deaths or something
-```{r}
-check <- regionData %>% arrange(desc(NewConfirmed)) %>% slice(1:15)
+Plot of the top 15 countires with the highest death percentage with confirmed cases above 100
 
-  ggplot(data = check, aes(x = Country, y = NewConfirmed)) + 
-  geom_bar(stat = "identity") +
-  labs(title = "Total Confirmed Cases by Continent")
+```{r}
+check <- regionData %>% filter(TotalConfirmed > 100) %>% arrange(desc(percentDeath)) %>% slice(1:15)
+
+ggplot(data = check, aes(x = Country, y = percentDeath)) + 
+  geom_bar(stat = "identity", aes(fill = Continent)) +
+  labs(title = "Top 15 Countries by Percentage of Deaths", y = "Percent of Deaths" ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 
