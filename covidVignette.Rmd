@@ -8,14 +8,6 @@ output:
     html_preview: False
 ---
 
-############## Current idea of what to do with this
-Rework the live, total, and oneDay functions to allow the user to select a date range, province, and city/city code. Probably just the city because the code was a little odd. Not sure how it's choosing that. I should be able to print the list of options from the choices by using `toString(sort(unique(data$City)))`. Maybe make a function for that too, idk. 
-
-The current issue is some of the urls don't work in the same order by just adding on things at the end. I'll have to go into the API site to see which one should be used for what the user might filter on. 
-
-After that the visuals/EDA should be it for creating the vignette and then move on to the blog and stuff. 
-
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
@@ -37,6 +29,8 @@ library(httr)
 library(jsonlite)
 library(countrycode)
 ```
+
+This also uses the `state.abb` and `state.name` from the `state` dataset. 
 
 # Functions
 
@@ -62,6 +56,7 @@ covidSummary <- function(type, continent = "all"){
   if(type == "global"){
     output <- as_tibble(dat$Global)
     
+    # Creates a new variable that calculates the percentage of deaths globally
     output <- output %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
     
   } else if(type == "country"){
@@ -75,6 +70,7 @@ covidSummary <- function(type, continent = "all"){
     output$Continent[is.na(output$Continent)] <- "Europe"
     continents <- unique(output$Continent)
     
+    # This removes unnecessary columns and creates a new column that calculates the percentage of deaths by country
     output <- output %>% select("Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered", "Date", "Continent") %>% mutate(percentDeath = round(TotalDeaths / TotalConfirmed * 100, 2), Date = as.Date(Date))
     
       if(continent != "all"){
@@ -171,6 +167,7 @@ They also need to have a status of confirmed, deaths, or recovered
 
 ```{r}
 dayOne <- function(country, IDType, status = "all", province = "all", provType, city = "all", fromDate = "", toDate = ""){
+  # This checks to see if there will be an error with the status later on before manipulating the dataset at all
   status <- tolower(status)
   if(!(status %in% c("all", "confirmed", "deaths", "recovered"))){
     stop("Status has to be one of the following: all, confirmed, deaths, recovered")
